@@ -1,0 +1,13 @@
+#!/bin/sh
+
+cd furniture-ecommerce
+echo "🔍 Running lint-staged..."
+pnpm exec lint-staged
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Lint/format failed. Fix errors before committing."
+  exit 1
+fi
+
+echo "✅ Lint passed!"
