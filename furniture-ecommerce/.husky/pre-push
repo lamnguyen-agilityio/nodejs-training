@@ -1,0 +1,19 @@
+#!/bin/sh
+
+cd furniture-ecommerce || { echo "❌ Cannot find furniture-ecommerce directory"; exit 1; }
+
+echo "📘 Type checking..."
+pnpm type-check
+if [ $? -ne 0 ]; then
+  echo "❌ Type check failed. Push aborted."
+  exit 1
+fi
+
+echo "🧪 Running tests..."
+pnpm test
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Push aborted."
+  exit 1
+fi
+
+echo "✅ All checks passed!"

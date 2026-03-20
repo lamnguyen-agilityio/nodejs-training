@@ -1,0 +1,18 @@
+#!/bin/sh
+
+commit_msg=$(head -n 1 "$1")
+pattern="^(feat|fix|chore|docs|style|refactor|test|perf|ci|build|revert)(\([^)]+\))?: .{1,100}$"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+  echo ""
+  echo "❌ Commit message incorrect format!"
+  echo ""
+  echo "Format : <type>(<scope>): <description>"
+  echo "Types  : feat|fix|chore|docs|style|refactor|test|perf|ci|build|revert"
+  echo ""
+  echo "✅ feat(cart): add merge cart on login"
+  echo "✅ fix(auth): handle expired token"
+  echo "❌ updated stuff"
+  echo ""
+  exit 1
+fi
