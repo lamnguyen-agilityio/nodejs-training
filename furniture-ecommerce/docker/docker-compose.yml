@@ -1,0 +1,20 @@
+services:
+  postgres:
+    extends:
+      file: docker-compose.base.yml
+      service: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    extends:
+      file: docker-compose.base.yml
+      service: api
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      NODE_ENV: staging
+
+volumes:
+  postgres_data:
