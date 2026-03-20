@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cd furniture-ecommerce
+cd furniture-ecommerce|| { echo "❌ Cannot find furniture-ecommerce directory"; exit 1; }
 
 echo "📘 Type checking..."
 pnpm type-check
