@@ -36,6 +36,9 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+# ── determine the absolute path of the directory ───────────────────────────────────────────────────────────────────
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 info()    { echo -e "${CYAN}${BOLD}[run]${RESET} $*"; }
 success() { echo -e "${GREEN}${BOLD}[run]${RESET} $*"; }
@@ -77,12 +80,12 @@ resolve_env() {
   local env="$1"
   case "$env" in
     dev)
-      COMPOSE_FILE="docker/docker-compose.dev.yml"
-      ENV_FILE=".env"
+      COMPOSE_FILE="${SCRIPT_DIR}/docker/docker-compose.dev.yml"
+      ENV_FILE="${SCRIPT_DIR}/.env"
       ;;
     staging)
-      COMPOSE_FILE="docker/docker-compose.yml"
-      ENV_FILE=".env.staging"
+      COMPOSE_FILE="${SCRIPT_DIR}/docker/docker-compose.yml"
+      ENV_FILE="${SCRIPT_DIR}/.env.staging"
       ;;
     *)
       error "Unknown environment: '${env}'. Valid values: dev | staging"
@@ -97,6 +100,11 @@ resolve_env() {
     else
       warn "Run: cp .env.example .env.staging  and fill in the staging values."
     fi
+    exit 1
+  fi
+
+  if [[ ! -f "$COMPOSE_FILE" ]]; then
+    error "Compose file '${COMPOSE_FILE}' not found."
     exit 1
   fi
 }
