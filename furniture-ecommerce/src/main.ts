@@ -1,5 +1,6 @@
+import { ClassSerializerInterceptor } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 
@@ -17,6 +18,7 @@ import { Environment } from './enums';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const reflector = app.get(Reflector);
   const { port, apiPrefix, nodeEnv } = app.get(ConfigService).getOrThrow<AppConfig>('app');
 
   // ── security ──────────────────────────────────────────────────
@@ -26,6 +28,14 @@ async function bootstrap() {
   // ── global prefix & versioning ────────────────────────────────
   app.setGlobalPrefix(apiPrefix);
   app.enableVersioning(versioningConfig());
+
+  // ── global providers ──────────────────────────────────────────
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(reflector, {
+      strategy: 'excludeAll',
+      excludeExtraneousValues: true,
+    }),
+  );
 
   // ── swagger (non-production only) ─────────────────────────────
   if (nodeEnv !== Environment.Production) {
