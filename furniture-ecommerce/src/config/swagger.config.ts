@@ -1,4 +1,5 @@
-import { DocumentBuilder, SwaggerCustomOptions } from '@nestjs/swagger';
+import { DocumentBuilder } from '@nestjs/swagger';
+import type { SwaggerCustomOptions } from '@nestjs/swagger';
 
 /**
  * configuration for the Swagger UI.

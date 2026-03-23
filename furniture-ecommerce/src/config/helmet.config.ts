@@ -1,4 +1,4 @@
-import { HelmetOptions } from 'helmet';
+import type { HelmetOptions } from 'helmet';
 
 import { Environment } from '@/enums';
 

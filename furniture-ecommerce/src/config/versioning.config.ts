@@ -1,4 +1,5 @@
-import { VersioningOptions, VersioningType } from '@nestjs/common';
+import type { VersioningOptions } from '@nestjs/common';
+import { VersioningType } from '@nestjs/common';
 
 import { API } from '@/constants';
 
