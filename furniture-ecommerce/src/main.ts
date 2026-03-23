@@ -9,6 +9,7 @@ import {
   swaggerConfig,
   swaggerUiConfig,
   helmetConfig,
+  corsConfig,
 } from '@/config';
 
 import { AppModule } from './app.module';
@@ -20,6 +21,7 @@ async function bootstrap() {
 
   // ── security ──────────────────────────────────────────────────
   app.use(helmet(helmetConfig(nodeEnv)));
+  app.enableCors(corsConfig());
 
   // ── global prefix & versioning ────────────────────────────────
   app.setGlobalPrefix(apiPrefix);
