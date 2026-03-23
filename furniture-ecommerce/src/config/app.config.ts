@@ -1,6 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
 import { API } from '@/constants';
+import { Environment } from '@/enums';
 
 /**
  * application configuration factory function.
@@ -9,7 +10,7 @@ import { API } from '@/constants';
  */
 export const appConfig = registerAs('app', () => ({
   port: Number(process.env.PORT),
-  nodeEnv: process.env.NODE_ENV,
+  nodeEnv: process.env.NODE_ENV as Environment,
   apiPrefix: API.PREFIX,
   defaultVersion: API.VERSION.DEFAULT,
 }));
