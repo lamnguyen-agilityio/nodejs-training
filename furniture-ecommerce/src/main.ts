@@ -9,14 +9,14 @@ import { Environment } from './enums';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const { port, apiPrefix } = app.get(ConfigService).getOrThrow<AppConfig>('app');
+  const { port, apiPrefix, nodeEnv } = app.get(ConfigService).getOrThrow<AppConfig>('app');
 
   // ── global prefix & versioning ────────────────────────────────
   app.setGlobalPrefix(apiPrefix);
   app.enableVersioning(versioningConfig());
 
   // ── swagger (non-production only) ─────────────────────────────
-  if (process.env.NODE_ENV !== Environment.Production) {
+  if (nodeEnv !== Environment.Production) {
     const document = SwaggerModule.createDocument(app, swaggerConfig());
     SwaggerModule.setup(`${apiPrefix}/docs`, app, document, swaggerUiConfig);
   }
