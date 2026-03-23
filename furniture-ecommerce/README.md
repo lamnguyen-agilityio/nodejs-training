@@ -1,98 +1,265 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Furniture E-Commerce
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A production-ready Furniture E-Commerce backend built with **NestJS**, featuring dual authentication providers, secure payment processing via Stripe, and a full admin management system.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+> **Project timeline:** Mar 17 – Apr 14, 2026 (4 weeks)
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Table of Contents
 
-## Project setup
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Environment Variables](#environment-variables)
+  - [Running with Docker](#running-with-docker)
+- [Available Scripts](#available-scripts)
+- [Development Guidelines](#development-guidelines)
 
-```bash
-$ pnpm install
+---
+
+## Overview
+
+This platform allows users to browse furniture products, manage a shopping cart, and purchase items through a secure checkout flow. It supports both guest and authenticated sessions, with cart state automatically synced on sign-in.
+
+---
+
+## Features
+
+### Authentication
+- Sign in via **Google** or **GitHub** — no manual registration required
+- Account is auto-created on first login
+- Dual-provider strategy: **Clerk** (primary) with **Auth0** as fallback
+- Admins can switch the active auth provider system-wide; all users are prompted to re-login
+
+### Product Browsing
+- Browse products organized by category
+- Search by product name
+- Filter by category
+- View detailed product pages
+
+### Shopping Cart
+- Add, remove, and update item quantities
+- Clear the entire cart
+- Guest cart is preserved and automatically merged on sign-in (higher quantity wins on duplicates)
+
+### Checkout & Payment
+- Payments processed via **Stripe**
+- Users receive real-time success/failure status
+- Purchased products are accessible immediately after payment
+
+### Orders
+- View full order history with status tracking
+- Order status updates automatically at each stage of the purchase lifecycle
+
+### Admin Panel
+- Add, edit, and toggle visibility of products and categories
+- View and manage all customer orders
+- Manually update order status
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend Framework | [NestJS](https://nestjs.com) v11 |
+| Language | TypeScript 5.7 |
+| Auth Provider (Primary) | [Clerk](https://clerk.com) |
+| Auth Provider (Backup) | [Auth0](https://auth0.com) |
+| Auth Framework | [Passport.js](https://www.passportjs.org) |
+| ORM | [MikroORM](https://mikro-orm.io) |
+| Database | PostgreSQL 16 |
+| Payments | [Stripe SDK](https://stripe.com/docs) |
+| Package Manager | [pnpm](https://pnpm.io) 10 |
+| Runtime | Node.js 24 |
+| Containerization | Docker + Docker Compose |
+| Deployment | [Railway](https://railway.app) |
+
+---
+
+## Architecture
+
+### Authentication Flow (Dual Provider)
+
+```
+Client Request
+     │
+     ▼
+ Config Service ──► Active Provider?
+     │                    │
+  Clerk ◄─────────────────┤ (primary)
+  Auth0 ◄─────────────────┘ (fallback)
+     │
+     ▼
+ Passport Guard ──► Sync User to DB
 ```
 
-## Compile and run the project
+### Payment Flow
 
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+```
+User Checkout
+     │
+     ▼
+Stripe Checkout Session
+     │
+     ▼
+Stripe Webhook ──► Order Confirmed / Failed
+     │
+     ▼
+User notified (success | failure)
 ```
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ pnpm run test
+## Project Structure
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+```
+furniture-ecommerce/
+├── src/
+│   ├── config/              # App configuration (env, providers)
+│   ├── app.module.ts        # Root application module
+│   ├── app.controller.ts    # Health check controller
+│   ├── app.service.ts
+│   └── main.ts              # Bootstrap entry point
+├── docker/
+│   ├── Dockerfile           # Multi-stage production build
+│   ├── Dockerfile.dev       # Development build (hot-reload)
+│   ├── docker-compose.base.yml
+│   ├── docker-compose.dev.yml   # Development environment
+│   └── docker-compose.yml       # Staging environment
+├── run.sh                   # Unified CLI runner (dev / staging)
+├── .env.example             # Environment variable template
+├── eslint.config.mjs
+├── lint-staged.config.js
+├── nest-cli.json
+├── tsconfig.json
+└── package.json
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Getting Started
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Prerequisites
+
+- [Docker](https://www.docker.com) + Docker Compose
+
+### Environment Variables
+
+Copy the example file and fill in your values:
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+cp .env.example .env
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+| Variable | Description |
+|---|---|
+| `PORT` | API server port (default: `3000`) |
+| `POSTGRES_DB` | PostgreSQL database name |
+| `POSTGRES_USER` | PostgreSQL username |
+| `POSTGRES_PASSWORD` | PostgreSQL password |
+| `POSTGRES_PORT` | PostgreSQL port (default: `5432`) |
+| `DATABASE_URL` | Full PostgreSQL connection string |
+| `CLERK_SECRET_KEY` | Clerk secret key |
+| `CLERK_PUBLISHABLE_KEY` | Clerk publishable key |
+| `AUTH0_DOMAIN` | Auth0 domain |
+| `AUTH0_CLIENT_ID` | Auth0 client ID |
+| `AUTH0_CLIENT_SECRET` | Auth0 client secret |
+| `STRIPE_SECRET_KEY` | Stripe secret key |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
 
-## Resources
+### Running with Docker
 
-Check out a few resources that may come in handy when working with NestJS:
+The project uses a `run.sh` script to manage Docker environments.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+**Development** (hot-reload enabled):
 
-## Support
+```bash
+# Start all services
+./run.sh dev up
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Tail logs
+./run.sh dev logs
 
-## Stay in touch
+# Tail logs for a specific service
+./run.sh dev logs api
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# Open a shell inside the api container
+./run.sh dev exec api
 
-## License
+# Restart a service
+./run.sh dev restart api
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Stop all services
+./run.sh dev down
+
+# Remove all containers and volumes (wipes database)
+./run.sh dev clean
+```
+
+**Staging** (production build):
+
+```bash
+cp .env.example .env.staging   # configure staging values
+
+./run.sh staging up
+./run.sh staging down
+```
+
+---
+
+## Available Scripts
+
+| Script | Description |
+|---|---|
+| `pnpm start` | Start the server |
+| `pnpm start:dev` | Start in watch mode (hot-reload) |
+| `pnpm start:debug` | Start in debug + watch mode |
+| `pnpm start:prod` | Start from compiled `dist/` |
+| `pnpm build` | Compile TypeScript to `dist/` |
+| `pnpm lint` | Run ESLint |
+| `pnpm lint:fix` | Run ESLint with auto-fix |
+| `pnpm format` | Format source files with Prettier |
+| `pnpm format:check` | Check formatting without writing |
+| `pnpm type-check` | Run TypeScript type checking |
+| `pnpm test` | Run unit tests |
+| `pnpm test:watch` | Run tests in watch mode |
+| `pnpm test:cov` | Run tests with coverage report |
+
+---
+
+## Development Guidelines
+
+### Git Hooks (via Husky)
+
+The project enforces code quality automatically on each commit:
+
+- **pre-commit** — runs `lint-staged`: ESLint fix + Prettier format on staged `src/**/*.ts` files
+- **commit-msg** — enforces [Conventional Commits](https://www.conventionalcommits.org) format
+- **pre-push** — runs type checking before any push
+
+### Commit Message Format
+
+```
+<type>(<scope>): <short description>
+
+Types: feat | fix | chore | docs | style | refactor | test | ci
+```
+
+Examples:
+```
+feat(auth): add Clerk provider integration
+fix(cart): resolve duplicate item merge logic
+chore(docker): update node version to 24
+```
+
+### Code Style
+
+- **ESLint** with TypeScript rules and import ordering enforced
+- **Prettier** for consistent formatting
+- All rules are auto-applied on commit via `lint-staged`
