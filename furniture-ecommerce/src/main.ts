@@ -1,8 +1,15 @@
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 
-import { versioningConfig, AppConfig, swaggerConfig, swaggerUiConfig } from '@/config';
+import {
+  versioningConfig,
+  AppConfig,
+  swaggerConfig,
+  swaggerUiConfig,
+  helmetConfig,
+} from '@/config';
 
 import { AppModule } from './app.module';
 import { Environment } from './enums';
@@ -10,6 +17,9 @@ import { Environment } from './enums';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const { port, apiPrefix, nodeEnv } = app.get(ConfigService).getOrThrow<AppConfig>('app');
+
+  // ── security ──────────────────────────────────────────────────
+  app.use(helmet(helmetConfig(nodeEnv)));
 
   // ── global prefix & versioning ────────────────────────────────
   app.setGlobalPrefix(apiPrefix);
