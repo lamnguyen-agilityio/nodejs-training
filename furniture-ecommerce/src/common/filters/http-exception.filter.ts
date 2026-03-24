@@ -147,7 +147,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 
   /** resolves the machine-readable error code for a given HTTP status code. */
-  private toErrCode(statusCode: number): string {
+  private toErrCode(statusCode: number): (typeof ERROR_CODES)[keyof typeof ERROR_CODES] {
     return HTTP_STATUS_ERROR_CODE_MAP[statusCode] ?? ERROR_CODES.UNKNOWN_ERROR;
   }
 }
