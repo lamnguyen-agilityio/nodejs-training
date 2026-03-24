@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { defineConfig, PostgreSqlDriver } from '@mikro-orm/postgresql';
 
 import { Environment } from '../enums';
@@ -13,7 +15,8 @@ export const databaseConfig = () =>
     password: process.env.POSTGRES_PASSWORD,
     host: process.env.POSTGRES_HOST,
     port: Number(process.env.POSTGRES_PORT),
-    entities: ['./dist/**/*.entity.js'],
-    entitiesTs: ['./src/**/*.entity.ts'],
-    debug: process.env.NODE_ENV !== Environment.Production,
+    entities: [join(__dirname, '..', '**', '*.entity.js')],
+    entitiesTs: [join(__dirname, '..', '**', '*.entity.ts')],
+    debug:
+      process.env.NODE_ENV !== Environment.Production && process.env.MIKRO_ORM_DEBUG === 'true',
   });
