@@ -10,5 +10,5 @@ import { API } from '@/constants';
 export const versioningConfig = (): VersioningOptions => ({
   type: VersioningType.URI,
   defaultVersion: API.VERSION.DEFAULT,
-  prefix: API.VERSION.PREFIX,
+  prefix: `${API.PREFIX}/${API.VERSION.PREFIX}`,
 });

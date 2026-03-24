@@ -28,8 +28,7 @@ async function bootstrap() {
   app.use(helmet(helmetConfig(nodeEnv)));
   app.enableCors(corsConfig());
 
-  // ── global prefix & versioning ────────────────────────────────
-  app.setGlobalPrefix(apiPrefix);
+  // ── versioning ────────────────────────────────
   app.enableVersioning(versioningConfig());
 
   // ── global providers ──────────────────────────────────────────
