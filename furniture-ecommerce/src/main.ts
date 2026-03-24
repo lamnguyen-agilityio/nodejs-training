@@ -5,6 +5,7 @@ import { SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 
+import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
 import {
   versioningConfig,
   AppConfig,
@@ -32,6 +33,7 @@ async function bootstrap() {
   app.enableVersioning(versioningConfig());
 
   // ── global providers ──────────────────────────────────────────
+  app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
