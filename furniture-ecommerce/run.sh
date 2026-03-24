@@ -17,11 +17,17 @@
 #   exec <service>        Open an interactive shell in a container
 #   clean                 Stop all services and remove volumes (wipes DB)
 #
+#   migration:create      Generate a new migration from entity diff
+#   migration:up          Run all pending migrations
+#   migration:down        Roll back the last migration
+#   migration:list        Show all migrations and their status
+#   migration:pending     Show only pending (unapplied) migrations
+#
 # Examples:
 #   ./run.sh dev up
 #   ./run.sh dev logs api
 #   ./run.sh dev exec api
-#   ./run.sh dev restart postgres
+#   ./run.sh dev migration:up
 #   ./run.sh staging up
 #   ./run.sh staging down
 # =============================================================================
@@ -64,11 +70,17 @@ ${BOLD}Commands:${RESET}
   ${GREEN}exec${RESET}    <service>       Open a shell inside a container
   ${GREEN}clean${RESET}                   Remove containers + volumes (wipes DB)
 
+  ${GREEN}migration:create${RESET}        Generate migration from entity diff
+  ${GREEN}migration:up${RESET}            Run all pending migrations
+  ${GREEN}migration:down${RESET}          Roll back last migration
+  ${GREEN}migration:list${RESET}          Show all migrations and their status
+  ${GREEN}migration:pending${RESET}       Show only pending migrations
+
 ${BOLD}Examples:${RESET}
   ./run.sh dev up
   ./run.sh dev logs api
   ./run.sh dev exec api
-  ./run.sh dev restart postgres
+  ./run.sh dev migration:up
   ./run.sh staging up
   ./run.sh staging down
 "
@@ -112,6 +124,13 @@ resolve_env() {
 # ── docker compose wrapper ────────────────────────────────────────────────────
 dc() {
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"
+}
+
+# ── migration helper (runs inside the api container) ─────────────────────────
+migration() {
+  local sub_cmd="$1"
+  info "Running migration:${sub_cmd} inside api container..."
+  dc exec api pnpm "migration:${sub_cmd}"
 }
 
 # ── argument parsing ──────────────────────────────────────────────────────────
@@ -180,6 +199,12 @@ case "$CMD" in
       info "Aborted."
     fi
     ;;
+
+  migration:create)  migration "create"  ;;
+  migration:up)      migration "up"      ;;
+  migration:down)    migration "down"    ;;
+  migration:list)    migration "list"    ;;
+  migration:pending) migration "pending" ;;
 
   help|--help|-h)
     usage 0
