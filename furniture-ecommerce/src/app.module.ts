@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+import { LoggerModule } from '@/common/logger/logger.module';
 import { envSchema, appConfig } from '@/config';
 
 import { AppController } from './app.controller';
@@ -16,6 +17,7 @@ import { AppService } from './app.service';
         abortEarly: false,
       },
     }),
+    LoggerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

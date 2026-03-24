@@ -13,6 +13,7 @@ export const appConfig = registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV as Environment,
   apiPrefix: API.PREFIX,
   defaultVersion: API.VERSION.DEFAULT,
+  logLevel: process.env.LOG_LEVEL,
 }));
 
 /**

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 
 import {
   versioningConfig,
@@ -17,7 +18,9 @@ import { AppModule } from './app.module';
 import { Environment } from './enums';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
   const reflector = app.get(Reflector);
   const { port, apiPrefix, nodeEnv } = app.get(ConfigService).getOrThrow<AppConfig>('app');
 
@@ -36,6 +39,10 @@ async function bootstrap() {
       excludeExtraneousValues: true,
     }),
   );
+
+  // ── logger ──────────────────────────────────────────
+  app.useLogger(app.get(Logger));
+  app.useGlobalInterceptors(new LoggerErrorInterceptor());
 
   // ── swagger (non-production only) ─────────────────────────────
   if (nodeEnv !== Environment.Production) {
