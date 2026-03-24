@@ -5,8 +5,14 @@ import { config } from 'dotenv';
 
 import { Environment } from '../enums';
 
-// load the root .env
-config({ path: join(__dirname, '..', '..', '.env') });
+// map NODE_ENV -> env file
+const envFileMap: Partial<Record<string, string>> = {
+  production: '.env.production',
+  staging: '.env.staging',
+};
+const envFileName = envFileMap[process.env.NODE_ENV ?? ''] ?? '.env';
+
+config({ path: join(__dirname, '..', '..', envFileName) });
 
 /**
  * defineConfig utility function to define the database configuration.

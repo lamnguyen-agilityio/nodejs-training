@@ -129,8 +129,13 @@ dc() {
 # ── migration helper (runs inside the api container) ─────────────────────────
 migration() {
   local sub_cmd="$1"
+  shift
   info "Running migration:${sub_cmd} inside api container..."
-  dc exec api pnpm "migration:${sub_cmd}"
+  if [[ $# -gt 0 ]]; then
+    dc exec api pnpm "migration:${sub_cmd}" -- "$@"
+  else
+    dc exec api pnpm "migration:${sub_cmd}"
+  fi
 }
 
 # ── argument parsing ──────────────────────────────────────────────────────────
