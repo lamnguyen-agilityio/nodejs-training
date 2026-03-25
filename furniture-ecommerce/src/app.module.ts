@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { LoggerModule } from '@/common/logger/logger.module';
 import { envSchema, appConfig, databaseConfig } from '@/config';
+import { UsersModule } from '@/modules/users/users.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -27,6 +28,9 @@ import { AppService } from './app.service';
     MikroOrmModule.forRootAsync({
       useFactory: () => databaseConfig(),
     }),
+
+    // ── feature modules ──────────────────────────────────────────────────────
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
