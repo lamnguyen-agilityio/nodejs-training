@@ -7,7 +7,7 @@ export const UserIdentityEntity = defineEntity({
   name: 'UserIdentity',
   tableName: 'user_identities',
   properties: {
-    // unique identifier for the user identity
+    // unique identifier for the user identity.
     id: p.uuid().primary().defaultRaw('uuid_generate_v7()'),
 
     /**
@@ -30,7 +30,7 @@ export const UserIdentityEntity = defineEntity({
      */
     providerId: p.string().unique(),
 
-    // social provider that owns this identity
+    // social provider that owns this identity.
     socialProvider: p.enum([SocialProvider.Google, SocialProvider.Github]),
 
     /**

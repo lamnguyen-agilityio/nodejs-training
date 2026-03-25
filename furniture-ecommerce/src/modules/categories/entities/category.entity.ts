@@ -4,16 +4,16 @@ export const CategoryEntity = defineEntity({
   name: 'Category',
   tableName: 'categories',
   properties: {
-    // unique identifier for the category
+    // unique identifier for the category.
     id: p.uuid().primary().defaultRaw('uuid_generate_v7()'),
 
-    // category name
+    // category name.
     name: p.string(),
 
-    // category slug — used in URLs and unique identifier
+    // category slug — used in URLs and unique identifier.
     slug: p.string().unique(),
 
-    // category description
+    // category description.
     description: p.string().nullable(),
 
     // creation timestamp.

@@ -5,7 +5,7 @@ import { config } from 'dotenv';
 
 import { Environment } from '../enums';
 
-// map NODE_ENV -> env file
+// map NODE_ENV -> env file.
 const envFileMap: Partial<Record<string, string>> = {
   production: '.env.production',
   staging: '.env.staging',
@@ -15,7 +15,7 @@ const envFileName = envFileMap[process.env.NODE_ENV ?? ''] ?? '.env';
 config({ path: join(__dirname, '..', '..', envFileName) });
 
 /**
- * defineConfig utility function to define the database configuration.
+ * utility function to define the database configuration.
  */
 export const databaseConfig = () =>
   defineConfig({

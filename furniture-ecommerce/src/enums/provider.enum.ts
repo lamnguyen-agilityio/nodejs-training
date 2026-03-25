@@ -1,8 +1,8 @@
 /**
  * Supported authentication providers.
  *
- * - Clerk  → primary provider (default)
- * - Auth0  → fallback provider used when Clerk is unavailable
+ * - Clerk  → primary provider (default).
+ * - Auth0  → fallback provider used when Clerk is unavailable.
  */
 export enum AuthProvider {
   Clerk = 'clerk',

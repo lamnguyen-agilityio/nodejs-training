@@ -14,10 +14,10 @@ export const createLoggerModule = (): DynamicModule =>
 
       return {
         pinoHttp: {
-          // level flow env — debug on dev, info on production
+          // level flow env — debug on dev, info on production.
           level: logLevel ?? (isDev ? 'debug' : 'info'),
 
-          // pino-pretty run dev only — production always raw JSON
+          // pino-pretty run dev only — production always raw JSON.
           transport: isDev
             ? {
                 target: 'pino-pretty',
@@ -30,7 +30,7 @@ export const createLoggerModule = (): DynamicModule =>
               }
             : undefined,
 
-          // auto mask fields sensitive — never log raw
+          // auto mask fields sensitive — never log raw.
           redact: {
             paths: ['req.headers.authorization', 'req.body.password', 'req.body.token'],
             censor: '[REDACTED]',
@@ -59,7 +59,7 @@ export const createLoggerModule = (): DynamicModule =>
             return id;
           },
 
-          // custom log level based on status code and error presence
+          // custom log level based on status code and error presence.
           customLogLevel: (_req, res, err) => {
             if (err) return 'error';
             if (res.statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) return 'error';
@@ -68,10 +68,10 @@ export const createLoggerModule = (): DynamicModule =>
             return 'info';
           },
 
-          // custom success message format
+          // custom success message format.
           customSuccessMessage: (req, res) => `${req.method} ${req.url} ${res.statusCode}`,
 
-          // custom error message format
+          // custom error message format.
           customErrorMessage: (req, res, err) =>
             `${req.method} ${req.url} ${res.statusCode} - ${err.message}`,
         },

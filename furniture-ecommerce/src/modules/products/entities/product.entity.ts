@@ -9,7 +9,7 @@ export const ProductEntity = defineEntity({
   name: 'Product',
   tableName: 'products',
   properties: {
-    // identity product in the database
+    // identity product in the database.
     id: p.uuid().primary().defaultRaw('uuid_generate_v7()'),
 
     // product name
@@ -18,16 +18,16 @@ export const ProductEntity = defineEntity({
     // product slug — used in URLs and unique identifier.
     slug: p.string().unique(),
 
-    // product description
+    // product description.
     description: p.string().nullable(),
 
-    // product price
+    // product price.
     price: p.decimal().precision(PRECISION).scale(SCALE),
 
-    // product image URL
+    // product image URL.
     image: p.string().nullable(),
 
-    // quantity in stock
+    // quantity in stock.
     quantityInStock: p.integer().default(PRODUCT_DEFAULTS.QTY_IN_STOCK),
 
     /**
