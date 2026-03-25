@@ -9,3 +9,14 @@ export enum OrderStatus {
   Cancelled = 'cancelled',
   Failed = 'failed',
 }
+
+/**
+ * the possible statuses for a payment of the application
+ */
+export enum PaymentStatus {
+  Pending = 'pending',
+  Succeeded = 'succeeded',
+  Failed = 'failed',
+  Cancelled = 'cancelled',
+  Refunded = 'refunded',
+}
