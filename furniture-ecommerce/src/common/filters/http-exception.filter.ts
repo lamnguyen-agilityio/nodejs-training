@@ -5,13 +5,13 @@ import { ERROR_CODES, MESSAGES, HTTP_STATUS_ERROR_CODE_MAP } from '@/constants';
 
 import type { ErrorDetail, ErrorResponse } from '../interfaces';
 
-/** shape of the response body produced by NestJS ValidationPipe on failure. */
+// shape of the response body produced by NestJS ValidationPipe on failure.
 interface ValidationErrorResponse {
   message: string[];
   error: string;
 }
 
-/** shape of a structured exception response carrying an errors array. */
+// shape of a structured exception response carrying an errors array.
 interface StructuredErrorResponse {
   message: string;
   errors: ErrorDetail[];
@@ -38,13 +38,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
   // normalisation
   // ---------------------------------------------------------------------------
 
-  /** converts any exception into a well-formed ErrorResponse. */
+  // converts any exception into a well-formed ErrorResponse.
   private normalize(exception: unknown): ErrorResponse {
     if (exception instanceof HttpException) {
       return this.normalizeHttpException(exception);
     }
 
-    /** Unhandled / non-HTTP errors — never leak internal detail to the client. */
+    // Unhandled / non-HTTP errors — never leak internal detail to the client.
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: MESSAGES.INTERNAL_SERVER_ERROR,
@@ -57,7 +57,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     };
   }
 
-  /** normalises an HttpException into an ErrorResponse. */
+  // normalises an HttpException into an ErrorResponse.
   private normalizeHttpException(exception: HttpException): ErrorResponse {
     const statusCode = exception.getStatus();
     const response = exception.getResponse();
@@ -74,7 +74,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       };
     }
 
-    /** NestJS built-in exceptions (NotFoundException, UnauthorizedException, etc.) */
+    // NestJS built-in exceptions (NotFoundException, UnauthorizedException, etc.)
     const message = typeof response === 'string' ? response : this.extractMessage(response);
 
     return {
@@ -133,7 +133,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   // helpers
   // ---------------------------------------------------------------------------
 
-  /** extracts the message string from an unknown HttpException response object. */
+  // extracts the message string from an unknown HttpException response object.
   private extractMessage(response: unknown): string {
     if (
       typeof response === 'object' &&
@@ -146,7 +146,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     return MESSAGES.UNKNOWN_ERROR;
   }
 
-  /** resolves the machine-readable error code for a given HTTP status code. */
+  // resolves the machine-readable error code for a given HTTP status code.
   private toErrCode(statusCode: number): (typeof ERROR_CODES)[keyof typeof ERROR_CODES] {
     return HTTP_STATUS_ERROR_CODE_MAP[statusCode] ?? ERROR_CODES.UNKNOWN_ERROR;
   }

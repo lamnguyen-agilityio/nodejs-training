@@ -5,7 +5,7 @@ import { ERROR_CODES } from '@/constants';
  * centralizing these types ensures a consistent error contract throughout the application.
  */
 
-/** represents a single structured error detail returned to the client. */
+// represents a single structured error detail returned to the client.
 export interface ErrorDetail {
   errCode: (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
   message: string;
@@ -13,7 +13,7 @@ export interface ErrorDetail {
   description?: string;
 }
 
-/** represents the top-level error response envelope sent to the client. */
+// represents the top-level error response envelope sent to the client.
 export interface ErrorResponse {
   statusCode: number;
   message: string;

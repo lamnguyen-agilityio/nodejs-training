@@ -10,7 +10,7 @@ export const CartItemEntity = defineEntity({
     // unique identifier for the cart item.
     id: p.uuid().primary().defaultRaw('uuid_generate_v7()'),
 
-    // the quantity of this cart item
+    // the quantity of this cart item.
     quantity: p.integer(),
 
     /**

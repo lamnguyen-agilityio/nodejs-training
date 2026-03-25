@@ -1,5 +1,5 @@
 /**
- * the possible statuses for an order of application
+ * the possible statuses for an order of application.
  */
 export enum OrderStatus {
   Pending = 'pending',
@@ -11,7 +11,7 @@ export enum OrderStatus {
 }
 
 /**
- * the possible statuses for a payment of the application
+ * the possible statuses for a payment of the application.
  */
 export enum PaymentStatus {
   Pending = 'pending',

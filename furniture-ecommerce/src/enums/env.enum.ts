@@ -1,6 +1,6 @@
 /**
  * application environment types
- * used for environment-specific configurations and behaviors
+ * used for environment-specific configurations and behaviors.
  */
 export enum Environment {
   Development = 'development',

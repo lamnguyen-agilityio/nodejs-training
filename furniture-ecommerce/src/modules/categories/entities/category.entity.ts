@@ -4,29 +4,32 @@ export const CategoryEntity = defineEntity({
   name: 'Category',
   tableName: 'categories',
   properties: {
-    /** Internal database primary key — not exposed in API responses. */
+    // unique identifier for the category.
     id: p.uuid().primary().defaultRaw('uuid_generate_v7()'),
 
-    /** Category name. */
+    // category name.
     name: p.string(),
 
-    /** Category slug — used in URLs and unique identifier. */
+    // category slug — used in URLs and unique identifier.
     slug: p.string().unique(),
 
-    /** Category description. */
+    // category description.
     description: p.string().nullable(),
 
+    // creation timestamp.
     createdAt: p
       .datetime()
       .defaultRaw('now()')
       .onCreate(() => new Date()),
+
+    // last update timestamp.
     updatedAt: p
       .datetime()
       .defaultRaw('now()')
       .onCreate(() => new Date())
       .onUpdate(() => new Date()),
 
-    /** Soft-delete timestamp. NULL = active, non-NULL = deleted. */
+    // soft-delete timestamp. NULL = active, non-NULL = deleted.
     deletedAt: p.datetime().nullable(),
   },
 });
