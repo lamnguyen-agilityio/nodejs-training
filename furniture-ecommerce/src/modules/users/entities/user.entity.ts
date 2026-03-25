@@ -18,9 +18,13 @@ export const UserEntity = defineEntity({
     /** Application-level role. Defaults to USER; elevated to ADMIN manually. */
     role: p.enum([Role.Admin, Role.User]).default(Role.User),
 
-    createdAt: p.datetime().onCreate(() => new Date()),
+    createdAt: p
+      .datetime()
+      .defaultRaw('now()')
+      .onCreate(() => new Date()),
     updatedAt: p
       .datetime()
+      .defaultRaw('now()')
       .onCreate(() => new Date())
       .onUpdate(() => new Date()),
 

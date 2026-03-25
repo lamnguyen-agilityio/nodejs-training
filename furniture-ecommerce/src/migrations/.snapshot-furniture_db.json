@@ -81,7 +81,7 @@
           "length": 6,
           "precision": null,
           "scale": null,
-          "default": null,
+          "default": "now()",
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
@@ -97,7 +97,7 @@
           "length": 6,
           "precision": null,
           "scale": null,
-          "default": null,
+          "default": "now()",
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
