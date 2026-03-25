@@ -7,7 +7,7 @@ export const CartItemEntity = defineEntity({
   name: 'CartItem',
   tableName: 'cart_items',
   properties: {
-    // identity product in the database
+    // unique identifier for the cart item.
     id: p.uuid().primary().defaultRaw('uuid_generate_v7()'),
 
     // the quantity of this cart item
