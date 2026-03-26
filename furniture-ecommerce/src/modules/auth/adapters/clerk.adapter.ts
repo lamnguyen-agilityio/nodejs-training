@@ -72,9 +72,19 @@ export class ClerkAdapter extends AuthProviderAdapter {
 
     // get primary email
     const primaryEmail =
-      clerkUser.primaryEmailAddress?.emailAddress ?? clerkUser.emailAddresses?.[0]?.emailAddress;
+      clerkUser.primaryEmailAddress?.verification?.status === 'verified'
+        ? clerkUser.primaryEmailAddress.emailAddress
+        : undefined;
 
-    if (!primaryEmail) {
+    // get fallback verified email
+    const fallbackVerifiedEmail = clerkUser.emailAddresses?.find(
+      (email) => email.verification?.status === 'verified',
+    )?.emailAddress;
+
+    // get verified email
+    const verifiedEmail = primaryEmail ?? fallbackVerifiedEmail;
+
+    if (!verifiedEmail) {
       throw new UnauthorizedException(MESSAGES.INVALID_EMAIL_ADDRESS);
     }
 
@@ -83,8 +93,8 @@ export class ClerkAdapter extends AuthProviderAdapter {
 
     return {
       providerId: clerkUser.id,
-      email: primaryEmail,
-      name: fullName || primaryEmail,
+      email: verifiedEmail,
+      name: fullName || verifiedEmail,
       socialProvider,
       socialProviderSub: externalAccount.providerUserId,
     };

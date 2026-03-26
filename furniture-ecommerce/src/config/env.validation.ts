@@ -18,4 +18,7 @@ export const envSchema = Joi.object({
   POSTGRES_USER: Joi.string().required(),
   POSTGRES_PASSWORD: Joi.string().required(),
   POSTGRES_PORT: Joi.number().port().required(),
+
+  // clerk.
+  CLERK_SECRET_KEY: Joi.string().required(),
 }).options({ allowUnknown: true });
