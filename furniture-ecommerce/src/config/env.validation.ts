@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-import { Environment } from '@/enums';
+import { Environment, AuthProvider } from '@/enums';
 
 /**
  * env schema make sure all variables inside .env file have valid values.
@@ -25,4 +25,7 @@ export const envSchema = Joi.object({
   // Auth0.
   AUTH0_AUDIENCE: Joi.string().required(),
   AUTH0_DOMAIN: Joi.string().required(),
+
+  // auth provider.
+  AUTH_PROVIDER: Joi.string().valid(AuthProvider.Clerk, AuthProvider.Auth0).required(),
 }).options({ allowUnknown: true });
