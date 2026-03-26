@@ -8,4 +8,7 @@ export const MESSAGES = {
   INTERNAL_SERVER_ERROR: 'Internal server error',
   UNEXPECTED_ERROR: 'An unexpected error occurred',
   UNKNOWN_ERROR: 'Unknown error',
+
+  //  ── invalid error messages ───────────────────────────────────────────────────────────────
+  INVALID_TOKEN: 'Invalid or expired token',
 } as const;
