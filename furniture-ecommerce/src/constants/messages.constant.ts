@@ -11,4 +11,9 @@ export const MESSAGES = {
 
   //  ── invalid error messages ───────────────────────────────────────────────────────────────
   INVALID_TOKEN: 'Invalid or expired token',
+  INVALID_SOCIAL_ACCOUNT: 'No valid social account found',
+  INVALID_EXTERNAL_ACCOUNT: 'No valid external account found',
+
+  //  ── clerk messages ────────────────────────────────────────────────────────────────────────
+  INVALID_EMAIL_ADDRESS: 'Clerk user has no verified email address',
 } as const;
