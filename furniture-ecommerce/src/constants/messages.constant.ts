@@ -14,6 +14,8 @@ export const MESSAGES = {
   INVALID_SOCIAL_ACCOUNT: 'No valid social account found',
   INVALID_EXTERNAL_ACCOUNT: 'No valid external account found',
   EMPTY_PAYLOAD: 'Empty payload',
+  INVALID_CURRENT_USER_DECORATOR:
+    'CurrentUser decorator requires an authenticated request. Ensure AuthGuard is applied.',
 
   //  ── clerk messages ────────────────────────────────────────────────────────────────────────
   INVALID_EMAIL_ADDRESS: 'Clerk user has no verified email address',
