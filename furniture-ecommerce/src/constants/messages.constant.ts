@@ -13,7 +13,11 @@ export const MESSAGES = {
   INVALID_TOKEN: 'Invalid or expired token',
   INVALID_SOCIAL_ACCOUNT: 'No valid social account found',
   INVALID_EXTERNAL_ACCOUNT: 'No valid external account found',
+  EMPTY_PAYLOAD: 'Empty payload',
 
   //  ── clerk messages ────────────────────────────────────────────────────────────────────────
   INVALID_EMAIL_ADDRESS: 'Clerk user has no verified email address',
+
+  //  ── auth0 messages ────────────────────────────────────────────────────────────────────────
+  MISSING_EMAIL: 'Auth0 token is missing email claim',
 } as const;
