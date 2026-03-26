@@ -8,7 +8,6 @@ import type { AuthProvider as IAuthProvider, AuthProviderProfile } from '../inte
 
 export abstract class AuthProviderAdapter implements IAuthProvider {
   abstract readonly provider: AuthProvider;
-
   protected readonly logger: PinoLogger;
 
   constructor() {}
@@ -18,8 +17,6 @@ export abstract class AuthProviderAdapter implements IAuthProvider {
    */
   async verifyToken(token: string): Promise<AuthProviderProfile> {
     try {
-      this.logger.setContext(this.constructor.name);
-
       return await this.doVerifyToken(token);
     } catch (err) {
       this.logger.warn(`Token verification failed: ${err}`);
