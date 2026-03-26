@@ -11,6 +11,10 @@ export class UsersRepository {
    * find a user by their ID or email.
    */
   async findOne(where: Partial<Pick<User, 'id' | 'email'>>): Promise<User | null> {
+    if (!where.id && !where.email) {
+      throw new Error('Must provide either id or email');
+    }
+
     return this.em.findOne(UserEntity, {
       ...where,
       deletedAt: null,
