@@ -21,4 +21,8 @@ export const envSchema = Joi.object({
 
   // clerk.
   CLERK_SECRET_KEY: Joi.string().required(),
+
+  // Auth0.
+  AUTH0_AUDIENCE: Joi.string().required(),
+  AUTH0_DOMAIN: Joi.string().required(),
 }).options({ allowUnknown: true });

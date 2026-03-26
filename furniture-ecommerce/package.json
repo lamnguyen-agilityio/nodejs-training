@@ -36,6 +36,7 @@
     ]
   },
   "dependencies": {
+    "@clerk/backend": "^3.2.3",
     "@mikro-orm/cli": "^7.0.5",
     "@mikro-orm/core": "^7.0.5",
     "@mikro-orm/migrations": "^7.0.5",
@@ -51,6 +52,8 @@
     "dotenv": "^17.3.1",
     "helmet": "^8.1.0",
     "joi": "^18.0.2",
+    "jsonwebtoken": "^9.0.3",
+    "jwks-rsa": "^4.0.1",
     "nestjs-pino": "^4.6.1",
     "pino-http": "^11.0.0",
     "reflect-metadata": "^0.2.2",
@@ -64,6 +67,7 @@
     "@nestjs/testing": "^11.0.1",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
