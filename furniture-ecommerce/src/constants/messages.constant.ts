@@ -20,4 +20,5 @@ export const MESSAGES = {
 
   //  ── auth0 messages ────────────────────────────────────────────────────────────────────────
   MISSING_EMAIL: 'Auth0 token is missing email claim',
+  INVALID_SUB: 'Unexpected Auth0 sub format',
 } as const;

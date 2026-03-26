@@ -6,6 +6,8 @@ import { MESSAGES } from '@/constants';
 import { SocialProvider } from '@/enums';
 import type { Auth0TokenPayload, AuthProviderProfile } from '@/modules/auth/interfaces';
 
+const { EMPTY_PAYLOAD, MISSING_EMAIL, INVALID_SUB } = MESSAGES;
+
 /**
  * verify JWT signature against Auth0's JWKS and return the decoded payload.
  */
@@ -24,9 +26,16 @@ export const verifyJwt = (token: string, jwksClient: JwksClient): Promise<Auth0T
         issuer: `https://${process.env.AUTH0_DOMAIN}/`,
         algorithms: ['RS256'],
       },
-      (err, decoded) => {
-        if (err || !decoded) return reject(err ?? new Error(MESSAGES.EMPTY_PAYLOAD));
-        resolve(decoded as Auth0TokenPayload);
+      (err, decoded: Auth0TokenPayload) => {
+        if (err) return reject(err);
+        if (!decoded || typeof decoded !== 'object' || Array.isArray(decoded)) {
+          return reject(new UnauthorizedException(EMPTY_PAYLOAD));
+        }
+        if (!decoded.sub || typeof decoded.sub !== 'string') {
+          return reject(new UnauthorizedException(EMPTY_PAYLOAD));
+        }
+
+        resolve(decoded);
       },
     );
   });
@@ -48,7 +57,7 @@ export const buildProfile = (
 
   const email = payload.email;
   if (!email) {
-    throw new UnauthorizedException(MESSAGES.MISSING_EMAIL);
+    throw new UnauthorizedException(MISSING_EMAIL);
   }
 
   return {
@@ -66,8 +75,12 @@ export const buildProfile = (
 export const splitSub = (sub: string): [string, string] => {
   const pipeIndex = sub.indexOf('|');
 
-  // if sub is not in the expected format
-  if (pipeIndex === -1) throw new UnauthorizedException(`Unexpected Auth0 sub format: ${sub}`);
+  if (pipeIndex === -1) throw new UnauthorizedException(INVALID_SUB);
 
-  return [sub.slice(0, pipeIndex), sub.slice(pipeIndex + 1)];
+  const connection = sub.slice(0, pipeIndex);
+  const id = sub.slice(pipeIndex + 1);
+
+  if (!connection || !id) throw new UnauthorizedException(INVALID_SUB);
+
+  return [connection, id];
 };
