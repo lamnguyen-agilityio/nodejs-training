@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
 import { AuthProvider } from '@/enums';
@@ -22,6 +22,7 @@ import { ClerkAdapter } from './adapters/clerk.adapter';
  */
 @Injectable()
 export class AuthProviderFactory implements OnModuleInit {
+  @Inject(PinoLogger)
   private readonly logger: PinoLogger;
 
   // all registered adapters keyed by their `AuthProvider` enum value.
@@ -33,11 +34,11 @@ export class AuthProviderFactory implements OnModuleInit {
   constructor(
     private readonly clerkAdapter: ClerkAdapter,
     private readonly auth0Adapter: Auth0Adapter,
-  ) {
-    this.logger.setContext(AuthProviderFactory.name);
-  }
+  ) {}
 
   onModuleInit(): void {
+    this.logger.setContext(AuthProviderFactory.name);
+
     // register all adapters.
     this.adapters.set(AuthProvider.Clerk, this.clerkAdapter);
     this.adapters.set(AuthProvider.Auth0, this.auth0Adapter);
