@@ -9,13 +9,14 @@ import type { AuthProviderProfile, AuthenticatedUser } from './interfaces';
 
 @Injectable()
 export class AuthService {
-  private readonly logger: PinoLogger;
-
   constructor(
     private readonly usersService: UsersService,
     private readonly userIdentitiesService: UserIdentitiesService,
     private readonly authProviderFactory: AuthProviderFactory,
-  ) {}
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(AuthService.name);
+  }
 
   /**
    * core login flow — called by `AuthGuard` on every authenticated request.
