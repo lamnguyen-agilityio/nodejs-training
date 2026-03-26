@@ -11,15 +11,15 @@ export abstract class AuthProviderAdapter implements IAuthProvider {
 
   protected readonly logger: PinoLogger;
 
-  constructor() {
-    this.logger.setContext(this.constructor.name);
-  }
+  constructor() {}
 
   /**
    * public entry point — wraps `doVerifyToken` with uniform error handling.
    */
   async verifyToken(token: string): Promise<AuthProviderProfile> {
     try {
+      this.logger.setContext(this.constructor.name);
+
       return await this.doVerifyToken(token);
     } catch (err) {
       this.logger.warn(`Token verification failed: ${err}`);
