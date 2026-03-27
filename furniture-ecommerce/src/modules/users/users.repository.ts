@@ -15,7 +15,7 @@ export class UsersRepository {
       throw new Error('Must provide either id or email');
     }
 
-    return this.em.findOne(UserEntity, {
+    return await this.em.findOne(UserEntity, {
       ...where,
       deletedAt: null,
     });

@@ -42,7 +42,6 @@ export const createLoggerModule = (): DynamicModule =>
               id: req.id,
               method: req.method,
               url: req.url,
-              ip: req.remoteAddress,
             }),
             res: (res) => ({ statusCode: res.statusCode }),
           },
@@ -58,6 +57,9 @@ export const createLoggerModule = (): DynamicModule =>
 
             return id;
           },
+
+          // custom received message format.
+          customReceivedMessage: (req) => `→ ${req.method} ${req.url}`,
 
           // custom log level based on status code and error presence.
           customLogLevel: (_req, res, err) => {

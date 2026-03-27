@@ -19,7 +19,7 @@ export class UserIdentitiesService {
     provider: AuthProvider,
     providerId: string,
   ): Promise<UserIdentityWithUser | null> {
-    return this.userIdentitiesRepository.findByProviderAndId(provider, providerId);
+    return await this.userIdentitiesRepository.findByProviderAndId(provider, providerId);
   }
 
   /**
@@ -36,7 +36,7 @@ export class UserIdentitiesService {
    * retrieve all identities for a user.
    */
   async findAllByUser(user: User): Promise<UserIdentity[]> {
-    return this.userIdentitiesRepository.findAllByUser(user);
+    return await this.userIdentitiesRepository.findAllByUser(user);
   }
 
   /**
@@ -44,7 +44,7 @@ export class UserIdentitiesService {
    * has been resolved. returns created=true on first login for this provider.
    */
   async upsert(data: UpsertIdentity): Promise<{ identity: UserIdentity; created: boolean }> {
-    return this.userIdentitiesRepository.upsert(data);
+    return await this.userIdentitiesRepository.upsert(data);
   }
 
   /**
@@ -52,6 +52,6 @@ export class UserIdentitiesService {
    * used by SyncService when creating the Auth0 shadow identity.
    */
   async create(data: UpsertIdentity): Promise<UserIdentity> {
-    return this.userIdentitiesRepository.create(data);
+    return await this.userIdentitiesRepository.create(data);
   }
 }
