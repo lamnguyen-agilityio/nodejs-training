@@ -8,9 +8,8 @@ import type { AuthProvider as IAuthProvider, AuthProviderProfile } from '../inte
 
 export abstract class AuthProviderAdapter implements IAuthProvider {
   abstract readonly provider: AuthProvider;
-  protected readonly logger: PinoLogger;
 
-  constructor() {}
+  constructor(protected readonly logger: PinoLogger) {}
 
   /**
    * public entry point — wraps `doVerifyToken` with uniform error handling.

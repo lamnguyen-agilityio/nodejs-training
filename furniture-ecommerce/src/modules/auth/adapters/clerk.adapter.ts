@@ -1,5 +1,6 @@
 import { createClerkClient, verifyToken } from '@clerk/backend';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 
 import { MESSAGES } from '@/constants';
 import { AuthProvider, SocialProvider } from '@/enums';
@@ -18,6 +19,11 @@ const CLERK_SOCIAL_PROVIDER_MAP: Record<string, SocialProvider> = {
 @Injectable()
 export class ClerkAdapter extends AuthProviderAdapter {
   readonly provider = AuthProvider.Clerk;
+
+  constructor(logger: PinoLogger) {
+    super(logger);
+    this.logger.setContext(ClerkAdapter.name);
+  }
 
   private readonly clerkClient = createClerkClient({
     secretKey: process.env.CLERK_SECRET_KEY,
