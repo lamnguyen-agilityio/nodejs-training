@@ -23,11 +23,11 @@ export class UserIdentitiesRepository {
     provider: AuthProvider,
     providerId: string,
   ): Promise<UserIdentityWithUser | null> {
-    return this.em.findOne(
+    return await this.em.findOne(
       UserIdentityEntity,
       { provider, providerId },
       { populate: ['user'] },
-    ) as Promise<UserIdentityWithUser | null>;
+    );
   }
 
   /**
@@ -35,7 +35,7 @@ export class UserIdentitiesRepository {
    * used by SyncModule to check whether an Auth0 identity already exists.
    */
   async findAllByUser(user: User): Promise<UserIdentity[]> {
-    return this.em.find(UserIdentityEntity, { user });
+    return await this.em.find(UserIdentityEntity, { user });
   }
 
   /**
@@ -43,7 +43,7 @@ export class UserIdentitiesRepository {
    * returns null when the identity does not exist yet (not yet synced).
    */
   async findByUserAndProvider(user: User, provider: AuthProvider): Promise<UserIdentity | null> {
-    return this.em.findOne(UserIdentityEntity, { user, provider });
+    return await this.em.findOne(UserIdentityEntity, { user, provider });
   }
 
   /**
