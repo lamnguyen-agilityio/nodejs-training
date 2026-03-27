@@ -38,10 +38,7 @@ export class Auth0SyncProvider implements SyncProvider {
   async syncUser(dto: SyncUserDto): Promise<SyncResultDto> {
     const connection = SOCIAL_PROVIDER_CONNECTION_MAP[dto.socialProvider];
 
-    /**
-     * try to find an existing Auth0 user by social provider sub first.
-     * Auth0 stores federated identities as "connection|socialProviderSub".
-     */
+    // ── 1. check if already exists on Auth0 ──────────────────────────────
     const existingUser = await this.findExistingUser(dto.socialProvider, dto.socialProviderSub);
 
     if (existingUser) {
@@ -53,20 +50,22 @@ export class Auth0SyncProvider implements SyncProvider {
       return this.toSyncResult(existingUser.user_id!, false);
     }
 
+    // ── 2. create federated user with correct user_id format ─────────────
     /**
-     * create a new federated user in Auth0.
-     * we use the social sub as the user_id suffix so the entry is stable
-     * and predictable across re-syncs.
+     * Auth0 requires user_id in the format `{connection}|{socialSub}`.
+     * e.g. "google-oauth2|1234567890" or "github|9876543"
      */
+    const auth0UserId = `${connection}|${dto.socialProviderSub}`;
+
     const created = await this.client.users.create({
       connection,
       email: dto.email,
       name: dto.name,
       email_verified: true,
+      user_id: auth0UserId,
       app_metadata: {
         internalUserId: dto.userId,
       },
-      user_id: dto.socialProviderSub,
     });
 
     this.logger.info(
@@ -85,19 +84,20 @@ export class Auth0SyncProvider implements SyncProvider {
     socialProvider: SocialProvider,
     socialProviderSub: string,
   ): Promise<{ user_id?: string } | null> {
-    try {
-      const connection = SOCIAL_PROVIDER_CONNECTION_MAP[socialProvider];
-      const query = `identities.connection:"${connection}" AND identities.user_id:"${socialProviderSub}"`;
-      const result = await this.client.users.list({ q: query, search_engine: 'v3' });
+    const connection = SOCIAL_PROVIDER_CONNECTION_MAP[socialProvider];
+    const expectedUserId = `${connection}|${socialProviderSub}`;
 
-      return result.data?.[0] ?? null;
-    } catch {
-      this.logger.warn(
-        { socialProvider, socialProviderSub },
-        'Auth0 user search failed — will attempt create',
+    try {
+      const result = await this.client.users.get(expectedUserId);
+
+      return result.data?.user_id ? result.data : null;
+    } catch (err: unknown) {
+      this.logger.error(
+        { err, socialProvider, socialProviderSub },
+        'Auth0 user lookup failed unexpectedly',
       );
 
-      return null;
+      throw err;
     }
   }
 
@@ -105,8 +105,6 @@ export class Auth0SyncProvider implements SyncProvider {
    * converts an external user ID and created flag into a SyncResultDto.
    */
   private toSyncResult(externalId: string, created: boolean): SyncResultDto {
-    const result = plainToInstance(SyncResultDto, { externalId, created });
-
-    return result;
+    return plainToInstance(SyncResultDto, { externalId, created });
   }
 }
