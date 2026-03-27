@@ -46,11 +46,11 @@ async function bootstrap() {
       strategy: 'excludeAll',
       excludeExtraneousValues: true,
     }),
+    new LoggerErrorInterceptor(),
   );
 
   // ── logger ──────────────────────────────────────────
   app.useLogger(app.get(Logger));
-  app.useGlobalInterceptors(new LoggerErrorInterceptor());
 
   // ── swagger (non-production only) ─────────────────────────────
   if (nodeEnv !== Environment.Production) {

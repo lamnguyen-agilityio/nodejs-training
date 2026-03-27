@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwksClient } from 'jwks-rsa';
+import { PinoLogger } from 'nestjs-pino';
 
 import { verifyJwt, buildProfile, splitSub } from '@/common/utils';
 import { AuthProvider, SocialProvider } from '@/enums';
@@ -19,6 +20,11 @@ const AUTH0_CONNECTION_MAP: Record<string, SocialProvider> = {
 @Injectable()
 export class Auth0Adapter extends AuthProviderAdapter {
   readonly provider = AuthProvider.Auth0;
+
+  constructor(logger: PinoLogger) {
+    super(logger);
+    this.logger.setContext(Auth0Adapter.name);
+  }
 
   /** JWKS client — caches public keys from Auth0's JWKS endpoint. */
   private readonly jwksClient = new JwksClient({
