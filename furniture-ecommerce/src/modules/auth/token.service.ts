@@ -7,6 +7,8 @@ import { MESSAGES } from '@/constants';
 import { TokenResponseDto } from './dtos';
 import type { InternalTokenPayload, AuthenticatedUser } from './interfaces';
 
+const ACCESS_TOKEN_EXPIRATION = Number(process.env.JWT_ACCESS_TOKEN_EXPIRY);
+
 @Injectable()
 export class TokenService {
   constructor(
@@ -25,7 +27,7 @@ export class TokenService {
 
     this.logger.info({ userId: user.userId }, 'Tokens issued');
 
-    return TokenResponseDto.from(accessToken);
+    return TokenResponseDto.from(accessToken, ACCESS_TOKEN_EXPIRATION);
   }
 
   /**

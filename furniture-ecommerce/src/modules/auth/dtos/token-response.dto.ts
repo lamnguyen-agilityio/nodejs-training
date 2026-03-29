@@ -1,5 +1,5 @@
 import { Expose, plainToInstance } from 'class-transformer';
-import { IsString } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 
 /**
  * stores token — accessToken for requests
@@ -9,9 +9,14 @@ export class TokenResponseDto {
   @IsString()
   accessToken: string;
 
-  static from(accessToken: string): TokenResponseDto {
+  @Expose()
+  @IsNumber()
+  expiresIn: number;
+
+  static from(accessToken: string, expiresIn: number): TokenResponseDto {
     return plainToInstance(TokenResponseDto, {
       accessToken,
+      expiresIn,
     });
   }
 }
