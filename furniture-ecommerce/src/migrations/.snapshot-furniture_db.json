@@ -1,6 +1,8 @@
 {
   "name": "public",
-  "namespaces": ["public"],
+  "namespaces": [
+    "public"
+  ],
   "tables": [
     {
       "name": "cart_items",
@@ -114,7 +116,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "cart_items_pkey",
@@ -125,20 +129,28 @@
       "checks": [],
       "foreignKeys": {
         "cart_items_product_id_foreign": {
-          "columnNames": ["product_id"],
+          "columnNames": [
+            "product_id"
+          ],
           "constraintName": "cart_items_product_id_foreign",
           "localTableName": "public.cart_items",
           "referencedTableName": "public.products",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "updateRule": "no action",
           "deleteRule": "no action"
         },
         "cart_items_user_id_foreign": {
-          "columnNames": ["user_id"],
+          "columnNames": [
+            "user_id"
+          ],
           "constraintName": "cart_items_user_id_foreign",
           "localTableName": "public.cart_items",
           "referencedTableName": "public.users",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "updateRule": "no action",
           "deleteRule": "no action"
         }
@@ -258,7 +270,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "categories_pkey",
@@ -266,7 +280,9 @@
           "primary": true
         },
         {
-          "columnNames": ["slug"],
+          "columnNames": [
+            "slug"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "categories_slug_unique",
@@ -376,7 +392,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "order_items_pkey",
@@ -387,20 +405,28 @@
       "checks": [],
       "foreignKeys": {
         "order_items_order_id_foreign": {
-          "columnNames": ["order_id"],
+          "columnNames": [
+            "order_id"
+          ],
           "constraintName": "order_items_order_id_foreign",
           "localTableName": "public.order_items",
           "referencedTableName": "public.orders",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "updateRule": "no action",
           "deleteRule": "no action"
         },
         "order_items_product_id_foreign": {
-          "columnNames": ["product_id"],
+          "columnNames": [
+            "product_id"
+          ],
           "constraintName": "order_items_product_id_foreign",
           "localTableName": "public.order_items",
           "referencedTableName": "public.products",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "updateRule": "no action",
           "deleteRule": "no action"
         }
@@ -455,7 +481,14 @@
           "scale": null,
           "default": "'pending'",
           "comment": null,
-          "enumItems": ["pending", "paid", "shipped", "delivered", "cancelled", "failed"]
+          "enumItems": [
+            "pending",
+            "paid",
+            "shipped",
+            "delivered",
+            "cancelled",
+            "failed"
+          ]
         },
         "total_amount": {
           "name": "total_amount",
@@ -505,7 +538,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "orders_pkey",
@@ -523,11 +558,15 @@
       ],
       "foreignKeys": {
         "orders_user_id_foreign": {
-          "columnNames": ["user_id"],
+          "columnNames": [
+            "user_id"
+          ],
           "constraintName": "orders_user_id_foreign",
           "localTableName": "public.orders",
           "referencedTableName": "public.users",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "updateRule": "no action",
           "deleteRule": "no action"
         }
@@ -627,7 +666,13 @@
           "scale": null,
           "default": "'pending'",
           "comment": null,
-          "enumItems": ["pending", "succeeded", "failed", "cancelled", "refunded"]
+          "enumItems": [
+            "pending",
+            "succeeded",
+            "failed",
+            "cancelled",
+            "refunded"
+          ]
         },
         "amount": {
           "name": "amount",
@@ -692,7 +737,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "payments_pkey",
@@ -710,11 +757,15 @@
       ],
       "foreignKeys": {
         "payments_order_id_foreign": {
-          "columnNames": ["order_id"],
+          "columnNames": [
+            "order_id"
+          ],
           "constraintName": "payments_order_id_foreign",
           "localTableName": "public.payments",
           "referencedTableName": "public.orders",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "updateRule": "no action",
           "deleteRule": "no action"
         }
@@ -894,7 +945,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "products_pkey",
@@ -902,7 +955,9 @@
           "primary": true
         },
         {
-          "columnNames": ["slug"],
+          "columnNames": [
+            "slug"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "products_slug_unique",
@@ -910,21 +965,18 @@
           "primary": false
         }
       ],
-      "checks": [
-        {
-          "name": "products_quantity_in_stock_check",
-          "columnName": "quantity_in_stock",
-          "definition": "CHECK ((quantity_in_stock >= 0))",
-          "expression": "quantity_in_stock >= 0"
-        }
-      ],
+      "checks": [],
       "foreignKeys": {
         "products_category_id_foreign": {
-          "columnNames": ["category_id"],
+          "columnNames": [
+            "category_id"
+          ],
           "constraintName": "products_category_id_foreign",
           "localTableName": "public.products",
           "referencedTableName": "public.categories",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "updateRule": "no action",
           "deleteRule": "no action"
         }
@@ -979,7 +1031,10 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": ["clerk", "auth0"]
+          "enumItems": [
+            "clerk",
+            "auth0"
+          ]
         },
         "provider_id": {
           "name": "provider_id",
@@ -1009,7 +1064,10 @@
           "scale": null,
           "default": null,
           "comment": null,
-          "enumItems": ["google", "github"]
+          "enumItems": [
+            "google",
+            "github"
+          ]
         },
         "social_provider_sub": {
           "name": "social_provider_sub",
@@ -1059,7 +1117,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "user_identities_pkey",
@@ -1067,7 +1127,9 @@
           "primary": true
         },
         {
-          "columnNames": ["provider_id"],
+          "columnNames": [
+            "provider_id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "user_identities_provider_id_unique",
@@ -1091,13 +1153,17 @@
       ],
       "foreignKeys": {
         "user_identities_user_id_foreign": {
-          "columnNames": ["user_id"],
+          "columnNames": [
+            "user_id"
+          ],
           "constraintName": "user_identities_user_id_foreign",
           "localTableName": "public.user_identities",
           "referencedTableName": "public.users",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "updateRule": "no action",
-          "deleteRule": "cascade"
+          "deleteRule": "no action"
         }
       },
       "nativeEnums": {},
@@ -1129,7 +1195,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": false,
+          "unique": true,
           "length": 255,
           "precision": null,
           "scale": null,
@@ -1210,12 +1276,27 @@
           "scale": null,
           "default": "'user'",
           "comment": null,
-          "enumItems": ["admin", "user"]
+          "enumItems": [
+            "admin",
+            "user"
+          ]
         }
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "email"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "users_email_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "users_pkey",
