@@ -32,7 +32,14 @@ export const createLoggerModule = (): DynamicModule =>
 
           // auto mask fields sensitive — never log raw.
           redact: {
-            paths: ['req.headers.authorization', 'req.body.password', 'req.body.token'],
+            paths: [
+              'req.headers.authorization',
+              'req.body.password',
+              'req.body.token',
+              '*.email',
+              '*.userId',
+              '*.provider',
+            ],
             censor: '[REDACTED]',
           },
 
