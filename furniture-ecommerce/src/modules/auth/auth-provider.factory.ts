@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
 import { AuthProvider } from '@/enums';
@@ -22,9 +22,6 @@ import { ClerkAdapter } from './adapters/clerk.adapter';
  */
 @Injectable()
 export class AuthProviderFactory implements OnModuleInit {
-  @Inject(PinoLogger)
-  private readonly logger: PinoLogger;
-
   // all registered adapters keyed by their `AuthProvider` enum value.
   private readonly adapters = new Map<AuthProvider, AuthProviderAdapter>();
 
@@ -34,6 +31,7 @@ export class AuthProviderFactory implements OnModuleInit {
   constructor(
     private readonly clerkAdapter: ClerkAdapter,
     private readonly auth0Adapter: Auth0Adapter,
+    private readonly logger: PinoLogger,
   ) {}
 
   onModuleInit(): void {
