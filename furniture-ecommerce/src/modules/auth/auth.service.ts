@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validateOrReject } from 'class-validator';
 import { PinoLogger } from 'nestjs-pino';
 
+import type { Role } from '@/enums';
 import { UserIdentitiesService } from '@/modules/user-identities/user-identities.service';
 import { UsersService } from '@/modules/users/users.service';
 
 import { AuthProviderFactory } from './auth-provider.factory';
+import { AuthenticatedUserDto } from './dtos';
 import type { AuthProviderProfile, AuthenticatedUser } from './interfaces';
 
 @Injectable()
@@ -41,10 +45,7 @@ export class AuthService {
     );
 
     if (existingIdentity) {
-      return {
-        ...existingIdentity.user,
-        userId: existingIdentity.user.id,
-      };
+      return this.toAuthenticatedUser(existingIdentity.user);
     }
 
     // ── 2. first login — upsert user + create identity ─────────────────────
@@ -74,9 +75,27 @@ export class AuthService {
       this.logger.info({ userId: user.id, provider: activeProvider }, 'New identity created');
     }
 
-    return {
-      ...user,
+    return this.toAuthenticatedUser(user);
+  }
+
+  /**
+   * maps a DB user to AuthenticatedUser.
+   */
+  private async toAuthenticatedUser(user: {
+    id: string;
+    email: string;
+    name: string;
+    role: Role;
+  }): Promise<AuthenticatedUser> {
+    const dto = plainToInstance(AuthenticatedUserDto, {
       userId: user.id,
-    };
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    });
+
+    await validateOrReject(dto);
+
+    return dto;
   }
 }
