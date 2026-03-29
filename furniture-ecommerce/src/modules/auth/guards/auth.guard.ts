@@ -1,31 +1,37 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import type { Request } from 'express';
+import { PinoLogger } from 'nestjs-pino';
 
 import { MESSAGES } from '@/constants';
 
-import { AuthProviderFactory } from '../auth-provider.factory';
-import { AuthService } from '../auth.service';
+import { AuthenticatedUserDto } from '../dtos';
 import type { AuthenticatedUser } from '../interfaces';
+import { TokenService } from '../token.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    private readonly authProviderFactory: AuthProviderFactory,
-    private readonly authService: AuthService,
-  ) {}
+    private readonly logger: PinoLogger,
+    private readonly tokenService: TokenService,
+  ) {
+    this.logger.setContext(AuthGuard.name);
+  }
 
-  async canActivate(ctx: ExecutionContext): Promise<boolean> {
+  canActivate(ctx: ExecutionContext): boolean {
     const request = ctx.switchToHttp().getRequest<Request & { user: AuthenticatedUser }>();
 
     const token = this.extractBearerToken(request);
+    const payload = this.tokenService.verifyAccessToken(token);
 
-    // verify token with the currently active adapter (Clerk or Auth0)
-    const adapter = this.authProviderFactory.getActiveAdapter();
-    const profile = await adapter.verifyToken(token);
+    const { sub, email, role, name } = payload;
 
-    // resolve local user + upsert identity — login flow
-    const user = await this.authService.resolveUserFromProfile(profile);
-    request.user = user;
+    request.user = plainToInstance(AuthenticatedUserDto, {
+      userId: sub,
+      email,
+      name,
+      role,
+    });
 
     return true;
   }
