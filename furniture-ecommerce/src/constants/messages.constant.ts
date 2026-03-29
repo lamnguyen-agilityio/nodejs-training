@@ -16,6 +16,7 @@ export const MESSAGES = {
   EMPTY_PAYLOAD: 'Empty payload',
   INVALID_CURRENT_USER_DECORATOR:
     'CurrentUser decorator requires an authenticated request. Ensure AuthGuard is applied.',
+  FORBIDDEN: 'You do not have permission to perform this action',
 
   //  ── clerk messages ────────────────────────────────────────────────────────────────────────
   INVALID_EMAIL_ADDRESS: 'Clerk user has no verified email address',
