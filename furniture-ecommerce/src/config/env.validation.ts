@@ -11,8 +11,8 @@ export const envSchema = Joi.object({
     .valid(...Object.values(Environment))
     .required(),
   PORT: Joi.number().port().required(),
-  JWT_SECRET: Joi.string().required(),
-  JWT_ACCESS_TOKEN_EXPIRY: Joi.number().required(),
+  JWT_SECRET: Joi.string().min(32).required(),
+  JWT_ACCESS_TOKEN_EXPIRY: Joi.number().integer().positive().required(),
 
   // database.
   POSTGRES_HOST: Joi.string().hostname().required(),
