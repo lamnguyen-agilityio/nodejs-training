@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 
-import { Role } from '@/enums';
+import { Role } from '@/common/enums';
 
 import { AuthProviderFactory } from './auth-provider.factory';
 import { AuthService } from './auth.service';

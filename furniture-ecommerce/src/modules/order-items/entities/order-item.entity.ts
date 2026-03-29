@@ -1,6 +1,6 @@
 import { defineEntity, p } from '@mikro-orm/core';
 
-import { PRICE_DECIMAL } from '@/constants';
+import { PRICE_DECIMAL } from '@/common/constants';
 import { OrderEntity } from '@/modules/orders/entities/order.entity';
 import { ProductEntity } from '@/modules/products/entities/product.entity';
 

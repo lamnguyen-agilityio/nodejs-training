@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { Role } from '@/enums';
+import { Role } from '@/common/enums';
 
 import type { User } from './entities/user.entity';
 import type { CreateUserDto, UpdateUserDto } from './interfaces';

@@ -1,8 +1,8 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
-import { MESSAGES } from '@/constants';
-import { AuthProvider } from '@/enums';
+import { MESSAGES } from '@/common/constants';
+import { AuthProvider } from '@/common/enums';
 
 import type { AuthProvider as IAuthProvider, AuthProviderProfile } from '../interfaces';
 

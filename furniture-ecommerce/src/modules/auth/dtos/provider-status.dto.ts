@@ -1,7 +1,7 @@
 import { Expose, plainToInstance } from 'class-transformer';
 import { IsEnum } from 'class-validator';
 
-import { AuthProvider } from '@/enums';
+import { AuthProvider } from '@/common/enums';
 
 /**
  * tells callers which provider is currently active and what is available.

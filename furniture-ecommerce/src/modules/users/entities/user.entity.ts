@@ -1,6 +1,6 @@
 import { defineEntity, p } from '@mikro-orm/core';
 
-import { Role } from '@/enums';
+import { Role } from '@/common/enums';
 
 export const UserEntity = defineEntity({
   name: 'User',

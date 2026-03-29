@@ -2,8 +2,8 @@ import { createClerkClient, verifyToken } from '@clerk/backend';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
-import { MESSAGES } from '@/constants';
-import { AuthProvider, SocialProvider } from '@/enums';
+import { MESSAGES } from '@/common/constants';
+import { AuthProvider, SocialProvider } from '@/common/enums';
 
 import { AuthProviderAdapter } from './auth-provider.adapter';
 import type { AuthProviderProfile } from '../interfaces';

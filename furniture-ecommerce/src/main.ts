@@ -16,7 +16,7 @@ import {
 } from '@/config';
 
 import { AppModule } from './app.module';
-import { Environment } from './enums';
+import { Environment } from './common/enums';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {

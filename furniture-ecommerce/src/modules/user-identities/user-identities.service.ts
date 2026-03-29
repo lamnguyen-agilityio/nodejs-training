@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { AuthProvider } from '@/enums';
+import { AuthProvider } from '@/common/enums';
 import type { User } from '@/modules/users/entities/user.entity';
 
 import type { UserIdentity, UserIdentityWithUser } from './entities/user-identity.entity';

@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
-import { AuthProvider } from '@/enums';
+import { AuthProvider } from '@/common/enums';
 
 import type { AuthProviderAdapter } from './adapters/auth-provider.adapter';
 import { Auth0Adapter } from './adapters/auth0.adapter';

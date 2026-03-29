@@ -1,4 +1,4 @@
-import { SocialProvider } from '@/enums';
+import { SocialProvider } from '@/common/enums';
 
 /**
  * normalised user profile extracted from a provider's JWT / userinfo endpoint.

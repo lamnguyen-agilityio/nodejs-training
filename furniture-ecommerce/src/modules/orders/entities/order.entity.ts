@@ -1,7 +1,7 @@
 import { defineEntity, p } from '@mikro-orm/core';
 
-import { PRICE_DECIMAL } from '@/constants';
-import { OrderStatus } from '@/enums';
+import { PRICE_DECIMAL } from '@/common/constants';
+import { OrderStatus } from '@/common/enums';
 import { UserEntity } from '@/modules/users/entities/user.entity';
 
 const { Pending, Paid, Shipped, Delivered, Cancelled, Failed } = OrderStatus;

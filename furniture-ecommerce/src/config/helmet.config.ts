@@ -1,6 +1,6 @@
 import type { HelmetOptions } from 'helmet';
 
-import { Environment } from '@/enums';
+import { Environment } from '@/common/enums';
 
 /**
  * configures Helmet middleware options based on the current environment.
