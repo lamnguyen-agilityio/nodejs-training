@@ -1,10 +1,9 @@
-import { Expose } from 'class-transformer';
+import { Expose, plainToInstance } from 'class-transformer';
 import { IsEnum } from 'class-validator';
 
 import { AuthProvider } from '@/enums';
 
 /**
- * response body for GET /auth/provider.
  * tells callers which provider is currently active and what is available.
  */
 export class ProviderStatusDto {
@@ -15,4 +14,8 @@ export class ProviderStatusDto {
   @IsEnum(AuthProvider, { each: true })
   @Expose()
   available: AuthProvider[];
+
+  static from(status: { active: AuthProvider; available: AuthProvider[] }): ProviderStatusDto {
+    return plainToInstance(ProviderStatusDto, status);
+  }
 }

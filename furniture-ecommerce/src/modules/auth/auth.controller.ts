@@ -1,5 +1,4 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
 
 import { Role } from '@/enums';
 
@@ -37,7 +36,7 @@ export class AuthController {
   @Get('provider')
   @UseGuards(AuthGuard)
   getProviderStatus(): ProviderStatusDto {
-    return plainToInstance(ProviderStatusDto, {
+    return ProviderStatusDto.from({
       active: this.authProviderFactory.getActiveProvider(),
       available: this.authProviderFactory.getRegisteredProviders(),
     });
@@ -49,7 +48,7 @@ export class AuthController {
   switchProvider(@Body() dto: SwitchProviderDto): ProviderStatusDto {
     this.authProviderFactory.switchProvider(dto.provider);
 
-    return plainToInstance(ProviderStatusDto, {
+    return ProviderStatusDto.from({
       active: this.authProviderFactory.getActiveProvider(),
       available: this.authProviderFactory.getRegisteredProviders(),
     });

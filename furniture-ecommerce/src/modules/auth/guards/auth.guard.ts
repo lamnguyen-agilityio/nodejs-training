@@ -1,5 +1,4 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
 import type { Request } from 'express';
 import { PinoLogger } from 'nestjs-pino';
 
@@ -26,12 +25,7 @@ export class AuthGuard implements CanActivate {
 
     const { sub, email, role, name } = payload;
 
-    request.user = plainToInstance(AuthenticatedUserDto, {
-      userId: sub,
-      email,
-      name,
-      role,
-    });
+    request.user = AuthenticatedUserDto.from({ userId: sub, email, name, role });
 
     return true;
   }
