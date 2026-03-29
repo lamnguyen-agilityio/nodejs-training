@@ -1,4 +1,4 @@
-import type { Role } from '@/enums';
+import type { Role } from '@/common/enums';
 
 /**
  * shape of the authenticated user attached to `request.user` by `AuthGuard`.

@@ -2,10 +2,15 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 
-import { MESSAGES, ROLES_KEY } from '@/constants';
-import { Role } from '@/enums';
+import { MESSAGES } from '@/common/constants';
+import { Role } from '@/common/enums';
 
 import type { AuthenticatedUser } from '../interfaces';
+
+/**
+ * key used to store role metadata in the reflector.
+ */
+export const ROLES_KEY = 'roles';
 
 /**
  * enforces role-based access control.

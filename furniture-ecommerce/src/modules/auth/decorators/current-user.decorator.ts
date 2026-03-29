@@ -1,7 +1,7 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
 
-import { MESSAGES } from '@/constants';
+import { MESSAGES } from '@/common/constants';
 
 import type { AuthenticatedUser } from '../interfaces';
 

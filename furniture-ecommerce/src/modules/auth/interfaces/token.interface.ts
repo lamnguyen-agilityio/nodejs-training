@@ -1,4 +1,4 @@
-import type { Role } from '@/enums';
+import type { Role } from '@/common/enums';
 
 /**
  * minimal shape of a decoded Auth0 ID / access token payload.

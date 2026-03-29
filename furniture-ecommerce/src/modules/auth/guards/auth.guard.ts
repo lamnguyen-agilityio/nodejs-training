@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import type { Request } from 'express';
 import { PinoLogger } from 'nestjs-pino';
 
-import { MESSAGES } from '@/constants';
+import { MESSAGES } from '@/common/constants';
 
 import { AuthenticatedUserDto } from '../dtos';
 import type { AuthenticatedUser } from '../interfaces';

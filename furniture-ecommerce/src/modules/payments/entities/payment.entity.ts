@@ -1,7 +1,7 @@
 import { defineEntity, p } from '@mikro-orm/core';
 
-import { PRICE_DECIMAL } from '@/constants';
-import { PaymentStatus } from '@/enums';
+import { PRICE_DECIMAL } from '@/common/constants';
+import { PaymentStatus } from '@/common/enums';
 import { OrderEntity } from '@/modules/orders/entities/order.entity';
 
 const { Pending, Succeeded, Failed, Cancelled, Refunded } = PaymentStatus;

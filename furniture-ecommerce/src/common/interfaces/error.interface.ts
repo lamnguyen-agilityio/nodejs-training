@@ -1,4 +1,4 @@
-import { ERROR_CODES } from '@/constants';
+import { ERROR_CODES } from '@/common/constants';
 
 /**
  * shared error response types used across filters, exceptions, and interceptors.

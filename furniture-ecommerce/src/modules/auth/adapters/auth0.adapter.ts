@@ -2,8 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwksClient } from 'jwks-rsa';
 import { PinoLogger } from 'nestjs-pino';
 
+import { AuthProvider, SocialProvider } from '@/common/enums';
 import { verifyJwt, buildProfile, splitSub } from '@/common/utils';
-import { AuthProvider, SocialProvider } from '@/enums';
 
 import { AuthProviderAdapter } from './auth-provider.adapter';
 import type { AuthProviderProfile } from '../interfaces';

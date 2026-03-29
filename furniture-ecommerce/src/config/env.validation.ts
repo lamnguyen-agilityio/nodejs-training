@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-import { Environment, AuthProvider } from '@/enums';
+import { Environment, AuthProvider } from '@/common/enums';
 
 /**
  * env schema make sure all variables inside .env file have valid values.

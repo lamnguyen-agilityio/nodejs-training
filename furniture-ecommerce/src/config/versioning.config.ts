@@ -1,7 +1,7 @@
 import type { VersioningOptions } from '@nestjs/common';
 import { VersioningType } from '@nestjs/common';
 
-import { API } from '@/constants';
+import { API } from '@/common/constants';
 
 /*
  * versioning configuration for the application.

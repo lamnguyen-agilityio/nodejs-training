@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PinoLogger } from 'nestjs-pino';
 
-import { MESSAGES } from '@/constants';
+import { MESSAGES } from '@/common/constants';
 
 import { TokenResponseDto } from './dtos';
 import type { InternalTokenPayload, AuthenticatedUser } from './interfaces';

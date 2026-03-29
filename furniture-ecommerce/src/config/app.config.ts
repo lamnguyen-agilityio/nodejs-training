@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
-import { API } from '@/constants';
-import { Environment } from '@/enums';
+import { API } from '@/common/constants';
+import { Environment } from '@/common/enums';
 
 /**
  * application configuration factory function.

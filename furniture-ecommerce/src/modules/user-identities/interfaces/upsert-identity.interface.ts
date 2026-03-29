@@ -1,4 +1,4 @@
-import { AuthProvider, SocialProvider } from '@/enums';
+import { AuthProvider, SocialProvider } from '@/common/enums';
 import type { User } from '@/modules/users/entities/user.entity';
 
 /**

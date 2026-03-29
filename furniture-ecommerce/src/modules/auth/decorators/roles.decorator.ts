@@ -1,7 +1,8 @@
 import { SetMetadata } from '@nestjs/common';
 
-import { ROLES_KEY } from '@/constants';
-import { Role } from '@/enums';
+import { Role } from '@/common/enums';
+
+import { ROLES_KEY } from '../guards/roles.guard';
 
 /**
  * attach required roles to a route handler.

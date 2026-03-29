@@ -2,8 +2,8 @@ import { UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import type { JwksClient } from 'jwks-rsa';
 
-import { MESSAGES } from '@/constants';
-import { SocialProvider } from '@/enums';
+import { MESSAGES } from '@/common/constants';
+import { SocialProvider } from '@/common/enums';
 import type { Auth0TokenPayload, AuthProviderProfile } from '@/modules/auth/interfaces';
 
 const { EMPTY_PAYLOAD, MISSING_EMAIL, INVALID_SUB } = MESSAGES;

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { defineConfig, PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { config } from 'dotenv';
 
-import { Environment } from '../enums';
+import { Environment } from '../common/enums';
 
 // map NODE_ENV -> env file.
 const envFileMap: Partial<Record<string, string>> = {

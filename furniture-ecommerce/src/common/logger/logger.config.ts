@@ -2,8 +2,8 @@ import { HttpStatus, type DynamicModule } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 
+import { Environment } from '@/common/enums';
 import type { AppConfig } from '@/config';
-import { Environment } from '@/enums';
 
 export const createLoggerModule = (): DynamicModule =>
   LoggerModule.forRootAsync({

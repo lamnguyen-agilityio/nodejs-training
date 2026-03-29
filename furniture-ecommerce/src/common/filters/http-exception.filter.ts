@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 
-import { ERROR_CODES, MESSAGES, HTTP_STATUS_ERROR_CODE_MAP } from '@/constants';
+import { ERROR_CODES, MESSAGES, HTTP_STATUS_ERROR_CODE_MAP } from '@/common/constants';
 
 import type { ErrorDetail, ErrorResponse } from '../interfaces';
 

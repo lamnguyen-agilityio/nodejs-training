@@ -1,7 +1,7 @@
 import { Expose, plainToInstance } from 'class-transformer';
 import { IsEmail, IsEnum, IsString, IsUUID } from 'class-validator';
 
-import { Role } from '@/enums';
+import { Role } from '@/common/enums';
 
 import type { AuthenticatedUser } from '../interfaces/authenticated-user.interface';
 
