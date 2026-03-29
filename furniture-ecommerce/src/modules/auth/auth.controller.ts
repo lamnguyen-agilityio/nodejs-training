@@ -1,4 +1,5 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 
 import { AuthProviderFactory } from './auth-provider.factory';
 import { CurrentUser } from './decorators';
@@ -27,9 +28,9 @@ export class AuthController {
    */
   @Get('provider')
   getProviderStatus(): ProviderStatusDto {
-    return {
+    return plainToInstance(ProviderStatusDto, {
       active: this.authProviderFactory.getActiveProvider(),
       available: this.authProviderFactory.getRegisteredProviders(),
-    };
+    });
   }
 }
