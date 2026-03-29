@@ -1,15 +1,29 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBody,
+} from '@nestjs/swagger';
 
 import { Role } from '@/common/enums';
 
 import { AuthProviderFactory } from './auth-provider.factory';
 import { AuthService } from './auth.service';
-import { CurrentUser, Roles } from './decorators';
-import { ExchangeTokenDto, ProviderStatusDto, SwitchProviderDto, TokenResponseDto } from './dtos';
-import { AuthGuard, RolesGuard } from './guards';
+import { CurrentUser, Auth, AuthRoles } from './decorators';
+import {
+  ExchangeTokenDto,
+  ProviderStatusDto,
+  SwitchProviderDto,
+  TokenResponseDto,
+  AuthenticatedUserDto,
+} from './dtos';
 import type { AuthenticatedUser } from './interfaces';
 import { TokenService } from './token.service';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -19,6 +33,20 @@ export class AuthController {
   ) {}
 
   @Post('token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Exchange provider token for internal token',
+    description:
+      'Verifies a Clerk or Auth0 JWT and returns an internal access token. ' +
+      'This is the only endpoint that accepts provider JWTs — ' +
+      'all other endpoints require the internal access token.',
+  })
+  @ApiBody({ type: ExchangeTokenDto })
+  @ApiOkResponse({
+    description: 'Internal token issued successfully',
+    type: TokenResponseDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Invalid or expired provider token' })
   async exchangeToken(@Body() dto: ExchangeTokenDto): Promise<TokenResponseDto> {
     const adapter = this.authProviderFactory.getActiveAdapter();
     const profile = await adapter.verifyToken(dto.providerToken);
@@ -28,13 +56,31 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(AuthGuard)
+  @Auth()
+  @ApiOperation({
+    summary: 'Get current authenticated user',
+    description: 'Returns the user decoded from the internal access token.',
+  })
+  @ApiOkResponse({
+    description: 'Authenticated user profile',
+    type: AuthenticatedUserDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid access token' })
   getMe(@CurrentUser() user: AuthenticatedUser): AuthenticatedUser {
     return user;
   }
 
   @Get('provider')
-  @UseGuards(AuthGuard)
+  @Auth()
+  @ApiOperation({
+    summary: 'Get active auth provider',
+    description: 'Returns the currently active provider and all registered providers.',
+  })
+  @ApiOkResponse({
+    description: 'Provider status',
+    type: ProviderStatusDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid access token' })
   getProviderStatus(): ProviderStatusDto {
     return ProviderStatusDto.from({
       active: this.authProviderFactory.getActiveProvider(),
@@ -42,9 +88,23 @@ export class AuthController {
     });
   }
 
-  @Post('provider/switch')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.Admin)
+  @Post('provider')
+  @HttpCode(HttpStatus.OK)
+  @AuthRoles(Role.Admin)
+  @ApiOperation({
+    summary: 'Switch active auth provider',
+    description:
+      'Switches the active provider in-memory immediately. ' +
+      'All subsequent requests will be verified by the new provider adapter. ' +
+      'Restricted to Admin role.',
+  })
+  @ApiBody({ type: SwitchProviderDto })
+  @ApiOkResponse({
+    description: 'Provider switched successfully',
+    type: ProviderStatusDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid access token' })
+  @ApiForbiddenResponse({ description: 'Insufficient role — Admin required' })
   switchProvider(@Body() dto: SwitchProviderDto): ProviderStatusDto {
     this.authProviderFactory.switchProvider(dto.provider);
 
