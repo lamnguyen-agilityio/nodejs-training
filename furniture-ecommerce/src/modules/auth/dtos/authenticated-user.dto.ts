@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer';
+import { Expose, plainToInstance } from 'class-transformer';
 import { IsEmail, IsEnum, IsString, IsUUID } from 'class-validator';
 
 import { Role } from '@/enums';
@@ -25,4 +25,8 @@ export class AuthenticatedUserDto implements AuthenticatedUser {
   @IsEnum(Role)
   @Expose()
   role: Role;
+
+  static from(user: AuthenticatedUser): AuthenticatedUserDto {
+    return plainToInstance(AuthenticatedUserDto, user);
+  }
 }

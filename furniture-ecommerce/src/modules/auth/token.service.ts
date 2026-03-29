@@ -1,15 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { plainToInstance } from 'class-transformer';
 import { PinoLogger } from 'nestjs-pino';
 
 import { MESSAGES } from '@/constants';
 
 import { TokenResponseDto } from './dtos';
 import type { InternalTokenPayload, AuthenticatedUser } from './interfaces';
-
-// access token expiry in seconds
-const ACCESS_TOKEN_EXPIRY_SECONDS = Number(process.env.JWT_ACCESS_TOKEN_EXPIRY);
 
 @Injectable()
 export class TokenService {
@@ -29,10 +25,7 @@ export class TokenService {
 
     this.logger.info({ userId: user.userId }, 'Tokens issued');
 
-    return plainToInstance(TokenResponseDto, {
-      accessToken,
-      expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
-    });
+    return TokenResponseDto.from(accessToken);
   }
 
   /**
