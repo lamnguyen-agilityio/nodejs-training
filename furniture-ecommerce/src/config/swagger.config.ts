@@ -1,6 +1,8 @@
 import { DocumentBuilder } from '@nestjs/swagger';
 import type { SwaggerCustomOptions } from '@nestjs/swagger';
 
+import { SWAGGER } from '@/common/constants';
+
 /**
  * configuration for the Swagger UI.
  */
@@ -17,7 +19,7 @@ export const swaggerConfig = () =>
         name: 'Authorization',
         in: 'header',
       },
-      'access-token',
+      SWAGGER.BEARER_AUTH_NAME,
     )
     .build();
 

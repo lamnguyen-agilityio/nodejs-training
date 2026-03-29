@@ -28,3 +28,10 @@ export const API = {
     DEFAULT: '1',
   },
 } as const;
+
+/**
+ * the constants for swagger application using for config
+ */
+export const SWAGGER = {
+  BEARER_AUTH_NAME: 'access-token',
+} as const;
