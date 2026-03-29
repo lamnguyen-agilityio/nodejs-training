@@ -37,7 +37,7 @@ export const UserIdentityEntity = defineEntity({
      * the sub claim issued by the social provider (e.g. Google user ID, Github username).
      * used to look up the local user on every request.
      */
-    socialProviderSub: p.string().unique(),
+    socialProviderSub: p.string(),
 
     // creation timestamp.
     createdAt: p
