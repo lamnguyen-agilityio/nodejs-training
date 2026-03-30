@@ -10,3 +10,20 @@ jest.mock('@nestjs/swagger', () => ({
   ApiUnauthorizedResponse: jest.fn(() => () => {}),
   ApiProperty: jest.fn(() => () => {}),
 }));
+
+jest.mock('@/common/utils', () => ({
+  verifyJwt: jest.fn(),
+  buildProfile: jest.fn(),
+  splitSub: jest.fn(),
+}));
+
+jest.mock('jwks-rsa', () => ({
+  JwksClient: jest.fn().mockImplementation(() => ({})),
+}));
+
+jest.mock('@clerk/backend', () => ({
+  createClerkClient: jest.fn(() => ({
+    users: { getUser: jest.fn() },
+  })),
+  verifyToken: jest.fn(),
+}));
