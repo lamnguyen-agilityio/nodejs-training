@@ -11,55 +11,20 @@ import {
 import { Role } from '@/common/enums';
 
 import { AuthProviderFactory } from './auth-provider.factory';
-import { AuthService } from './auth.service';
 import { CurrentUser, Auth, AuthRoles } from './decorators';
-import {
-  ExchangeTokenDto,
-  ProviderStatusDto,
-  SwitchProviderDto,
-  TokenResponseDto,
-  AuthenticatedUserDto,
-} from './dtos';
+import { ProviderStatusDto, SwitchProviderDto, AuthenticatedUserDto } from './dtos';
 import type { AuthenticatedUser } from './interfaces';
-import { TokenService } from './token.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authProviderFactory: AuthProviderFactory,
-    private readonly authService: AuthService,
-    private readonly tokenService: TokenService,
-  ) {}
-
-  @Post('token')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Exchange provider token for internal token',
-    description:
-      'Verifies a Clerk or Auth0 JWT and returns an internal access token. ' +
-      'This is the only endpoint that accepts provider JWTs — ' +
-      'all other endpoints require the internal access token.',
-  })
-  @ApiBody({ type: ExchangeTokenDto })
-  @ApiOkResponse({
-    description: 'Internal token issued successfully',
-    type: TokenResponseDto,
-  })
-  @ApiUnauthorizedResponse({ description: 'Invalid or expired provider token' })
-  async exchangeToken(@Body() dto: ExchangeTokenDto): Promise<TokenResponseDto> {
-    const adapter = this.authProviderFactory.getActiveAdapter();
-    const profile = await adapter.verifyToken(dto.providerToken);
-    const user = await this.authService.resolveUserFromProfile(profile);
-
-    return this.tokenService.issueTokens(user);
-  }
+  constructor(private readonly authProviderFactory: AuthProviderFactory) {}
 
   @Get('me')
   @Auth()
   @ApiOperation({
     summary: 'Get current authenticated user',
-    description: 'Returns the user decoded from the internal access token.',
+    description: 'Returns the user decoded from the access token.',
   })
   @ApiOkResponse({
     description: 'Authenticated user profile',
