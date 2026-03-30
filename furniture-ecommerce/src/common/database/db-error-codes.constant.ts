@@ -17,6 +17,8 @@ export const DB_ERROR_CODES = {
   CONNECTION_EXCEPTION: '08000',
   CONNECTION_DOES_NOT_EXIST: '08003',
   CONNECTION_FAILURE: '08006',
+
+  // class 57 — operator intervention
   QUERY_CANCELED: '57014',
 } as const;
 

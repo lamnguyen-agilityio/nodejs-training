@@ -65,7 +65,17 @@ export const classifyDbError = (err: unknown): DbErrorClassification => {
  */
 export const toConflictException = (err: unknown): ConflictException => {
   const e = err as Record<string, unknown>;
-  const detail = typeof e['detail'] === 'string' ? e['detail'] : 'Resource already exists';
+  let detail: string = 'Resource already exists';
+
+  if (typeof e['detail'] === 'string') {
+    detail = e['detail'];
+  } else if (e['cause'] && typeof e['cause'] === 'object') {
+    const cause = e['cause'] as Record<string, unknown>;
+
+    if (typeof cause['detail'] === 'string') {
+      detail = cause['detail'];
+    }
+  }
 
   return new ConflictException(detail);
 };
