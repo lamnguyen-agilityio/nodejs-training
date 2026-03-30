@@ -30,6 +30,7 @@ const config: Config = {
     '!main.ts',
     '!**/*.module.ts',
     '!**/config/**',
+    '!**/logger/**',
 
     // ── exclude: static definitions (no logic to test) ───────────────────
     '!**/constants/**',
