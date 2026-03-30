@@ -2,7 +2,7 @@
 
 A production-ready Furniture E-Commerce backend built with **NestJS**, featuring dual authentication providers, secure payment processing via Stripe, and a full admin management system.
 
-> **Project timeline:** Mar 17 – Apr 14, 2026 (4 weeks)
+> **Project timeline:** Mar 17 – Apr 07, 2026 (3 weeks)
 
 ---
 
@@ -24,14 +24,14 @@ A production-ready Furniture E-Commerce backend built with **NestJS**, featuring
 
 ## Overview
 
-This platform allows users to browse furniture products, manage a shopping cart, and purchase items through a secure checkout flow. It supports both guest and authenticated sessions, with cart state automatically synced on sign-in.
+This platform allows users to browse furniture products, manage a shopping cart, and purchase items through a secure checkout flow. It supports both guest and authenticated sessions.
 
 ---
 
 ## Features
 
 ### Authentication
-- Sign in via **Google** or **GitHub** — no manual registration required
+- Sign in via **Google** or **GitHub** — using email to identify the user — no manual registration required
 - Account is auto-created on first login
 - Dual-provider strategy: **Clerk** (primary) with **Auth0** as fallback
 - Admins can switch the active auth provider system-wide; all users are prompted to re-login
@@ -84,21 +84,6 @@ This platform allows users to browse furniture products, manage a shopping cart,
 
 ## Architecture
 
-### Authentication Flow (Dual Provider)
-
-```
-Client Request
-     │
-     ▼
- Config Service ──► Active Provider?
-     │                    │
-  Clerk ◄─────────────────┤ (primary)
-  Auth0 ◄─────────────────┘ (fallback)
-     │
-     ▼
- Passport Guard ──► Sync User to DB
-```
-
 ### Payment Flow
 
 ```
@@ -121,23 +106,56 @@ User notified (success | failure)
 ```
 furniture-ecommerce/
 ├── src/
-│   ├── config/              # App configuration (env, providers)
-│   ├── app.module.ts        # Root application module
-│   ├── app.controller.ts    # Health check controller
+│   ├── common/
+│   │   ├── constants/           # Shared constants (app, db, error codes, messages)
+│   │   ├── database/            # DB retry policy & @Retryable decorator
+│   │   ├── enums/               # Shared enums (env, role, status, provider)
+│   │   ├── filters/             # Global HTTP exception filter
+│   │   ├── interfaces/          # Shared interfaces
+│   │   ├── logger/              # Pino logger config
+│   │   └── utils/               # Shared utility helpers
+│   ├── config/                  # App configuration (env validation, cors, db, swagger, versioning)
+│   ├── migrations/              # MikroORM database migrations
+│   ├── modules/
+│   │   ├── auth/                # Authentication module
+│   │   │   ├── adapters/        # Auth provider adapters (Clerk, Auth0)
+│   │   │   ├── decorators/      # @Auth, @CurrentUser, @Roles decorators
+│   │   │   ├── dtos/            # Auth DTOs (authenticated-user, switch-provider)
+│   │   │   ├── guards/          # AuthGuard, RolesGuard
+│   │   │   └── interfaces/      # Auth interfaces (token, provider, authenticated-user)
+│   │   ├── cart-items/
+│   │   │   └── entities/        # CartItem entity
+│   │   ├── categories/
+│   │   │   └── entities/        # Category entity
+│   │   ├── order-items/
+│   │   │   └── entities/        # OrderItem entity
+│   │   ├── orders/
+│   │   │   └── entities/        # Order entity
+│   │   ├── payments/
+│   │   │   └── entities/        # Payment entity
+│   │   ├── products/
+│   │   │   └── entities/        # Product entity
+│   │   ├── user-identities/     # Multi-provider identity linking
+│   │   └── users/               # User module (service, repository)
+│   ├── app.module.ts            # Root application module
+│   ├── app.controller.ts        # Health check controller
 │   ├── app.service.ts
-│   └── main.ts              # Bootstrap entry point
+│   └── main.ts                  # Bootstrap entry point
 ├── docker/
-│   ├── Dockerfile           # Multi-stage production build
-│   ├── Dockerfile.dev       # Development build (hot-reload)
+│   ├── Dockerfile               # Multi-stage production build
+│   ├── Dockerfile.dev           # Development build (hot-reload)
 │   ├── docker-compose.base.yml
 │   ├── docker-compose.dev.yml   # Development environment
 │   └── docker-compose.yml       # Staging environment
-├── run.sh                   # Unified CLI runner (dev / staging)
-├── .env.example             # Environment variable template
+├── run.sh                       # Unified CLI runner (dev / staging)
+├── .env.example                 # Environment variable template
+├── jest.config.ts
+├── test-setup.ts
 ├── eslint.config.mjs
 ├── lint-staged.config.js
 ├── nest-cli.json
 ├── tsconfig.json
+├── tsconfig.build.json
 └── package.json
 ```
 
