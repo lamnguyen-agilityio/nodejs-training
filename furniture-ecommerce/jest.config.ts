@@ -61,6 +61,7 @@ const config: Config = {
   testEnvironment: 'node',
   clearMocks: true,
   restoreMocks: true,
+  setupFilesAfterEnv: ['<rootDir>/../test-setup.ts'],
 };
 
 export default config;
