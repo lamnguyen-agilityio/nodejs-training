@@ -5,13 +5,21 @@ const config: Config = {
   rootDir: 'src',
   testRegex: '.*\\.spec\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': [
+    '^.+\\.ts$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/../tsconfig.json',
       },
     ],
+    '^.+\\.js$': [
+      'babel-jest',
+      {
+        plugins: ['babel-plugin-transform-import-meta'],
+        presets: [['@babel/preset-env', { targets: { node: 'current' } }]],
+      },
+    ],
   },
+  transformIgnorePatterns: ['node_modules/(?!((gestalt|@mikro-orm|.*\\.mjs$|\\.pnpm)))'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
