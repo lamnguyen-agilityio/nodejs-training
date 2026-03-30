@@ -19,7 +19,7 @@ const config: Config = {
       },
     ],
   },
-  transformIgnorePatterns: ['node_modules/(?!((gestalt|@mikro-orm|.*\\.mjs$|\\.pnpm)))'],
+  transformIgnorePatterns: ['node_modules/(?!(.pnpm|jose|@mikro-orm|jwks-rsa))'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
@@ -35,7 +35,7 @@ const config: Config = {
     '!**/constants/**',
     '!**/enums/**',
     '!**/interfaces/**',
-    '!**/dto/**',
+    '!**/dtos/**',
     '!**/entities/**',
 
     // ── exclude: barrel files (re-exports only, no logic) ────────────────
