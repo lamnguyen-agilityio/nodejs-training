@@ -1,11 +1,19 @@
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
+
+import { Retryable } from '@/common/database';
 
 import { UserEntity, type User } from './entities/user.entity';
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly em: EntityManager) {}
+  constructor(
+    private readonly em: EntityManager,
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(UsersRepository.name);
+  }
 
   /**
    * find a user by their ID or email.
@@ -25,6 +33,7 @@ export class UsersRepository {
    * insert a new user and flush immediately.
    * returns the persisted entity.
    */
+  @Retryable()
   async create(data: Pick<User, 'email' | 'name' | 'role'>): Promise<User> {
     const user = this.em.create(UserEntity, data);
     this.em.persist(user);
@@ -36,6 +45,7 @@ export class UsersRepository {
   /**
    * apply a partial update to an existing user and flush.
    */
+  @Retryable()
   async update(user: User, data: Partial<Pick<User, 'name'>>): Promise<User> {
     this.em.assign(user, data);
     await this.em.flush();
@@ -46,6 +56,7 @@ export class UsersRepository {
   /**
    * soft-delete: set deletedAt and flush.
    */
+  @Retryable()
   async softDelete(user: User): Promise<void> {
     this.em.assign(user, { deletedAt: new Date() });
     await this.em.flush();

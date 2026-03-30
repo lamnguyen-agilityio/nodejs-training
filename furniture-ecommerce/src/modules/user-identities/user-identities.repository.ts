@@ -1,6 +1,8 @@
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 
+import { Retryable } from '@/common/database';
 import { AuthProvider } from '@/common/enums';
 import type { User } from '@/modules/users/entities/user.entity';
 
@@ -13,7 +15,12 @@ import type { UpsertIdentity } from './interfaces';
 
 @Injectable()
 export class UserIdentitiesRepository {
-  constructor(private readonly em: EntityManager) {}
+  constructor(
+    private readonly em: EntityManager,
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(UserIdentitiesRepository.name);
+  }
 
   /**
    * find a single identity by (provider, providerId).
@@ -49,6 +56,7 @@ export class UserIdentitiesRepository {
   /**
    * insert a new identity and flush immediately.
    */
+  @Retryable()
   async create(data: UpsertIdentity): Promise<UserIdentity> {
     const identity = this.em.create(UserIdentityEntity, data);
     this.em.persist(identity);
@@ -62,6 +70,7 @@ export class UserIdentitiesRepository {
    * matches on (provider, providerId) — the stable external key.
    * returns the identity and a flag indicating whether it was newly created.
    */
+  @Retryable()
   async upsert(data: UpsertIdentity): Promise<{ identity: UserIdentity; created: boolean }> {
     const existing = await this.findByProviderAndId(data.provider, data.providerId);
 
