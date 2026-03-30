@@ -9,6 +9,11 @@ jest.mock('@nestjs/swagger', () => ({
   ApiBearerAuth: jest.fn(() => () => {}),
   ApiUnauthorizedResponse: jest.fn(() => () => {}),
   ApiProperty: jest.fn(() => () => {}),
+  ApiOperation: jest.fn(() => () => {}),
+  ApiOkResponse: jest.fn(() => () => {}),
+  ApiBody: jest.fn(() => () => {}),
+  ApiForbiddenResponse: jest.fn(() => () => {}),
+  ApiTags: jest.fn(() => () => {}),
 }));
 
 jest.mock('@/common/utils', () => ({
