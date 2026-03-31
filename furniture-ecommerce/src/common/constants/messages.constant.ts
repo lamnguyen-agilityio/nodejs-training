@@ -24,4 +24,14 @@ export const MESSAGES = {
   //  ── auth0 messages ────────────────────────────────────────────────────────────────────────
   MISSING_EMAIL: 'Auth0 token is missing email claim',
   INVALID_SUB: 'Unexpected Auth0 sub format',
+
+  // category messages  ────────────────────────────────────────────────────────────────────────
+  CATEGORY_SLUG_CONFLICT: 'Category with this name already exists',
+
+  // product messages  ────────────────────────────────────────────────────────────────────────
+  PRODUCT_SLUG_CONFLICT: 'Product with this name already exists',
+  INSUFFICIENT_STOCK: 'Insufficient stock for requested quantity',
+
+  // cart messages  ────────────────────────────────────────────────────────────────────────
+  CART_ITEM_NOT_FOUND: 'Cart item not found',
 } as const;
