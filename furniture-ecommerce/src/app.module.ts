@@ -6,12 +6,12 @@ import { LoggerModule } from '@/common/logger/logger.module';
 import { envSchema, appConfig, databaseConfig } from '@/config';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { CategoriesModule } from '@/modules/categories/categories.module';
+import { ProductsModule } from '@/modules/products/products.module';
 import { UserIdentitiesModule } from '@/modules/user-identities/user-identities.module';
 import { UsersModule } from '@/modules/users/users.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ProductsModule } from './modules/products/products.module';
 
 @Module({
   imports: [
