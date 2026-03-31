@@ -6,6 +6,7 @@ import { LoggerModule } from '@/common/logger/logger.module';
 import { envSchema, appConfig, databaseConfig } from '@/config';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { CategoriesModule } from '@/modules/categories/categories.module';
+import { ProductsModule } from '@/modules/products/products.module';
 import { UserIdentitiesModule } from '@/modules/user-identities/user-identities.module';
 import { UsersModule } from '@/modules/users/users.module';
 
@@ -37,6 +38,7 @@ import { AppService } from './app.service';
     UserIdentitiesModule,
     AuthModule,
     CategoriesModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
