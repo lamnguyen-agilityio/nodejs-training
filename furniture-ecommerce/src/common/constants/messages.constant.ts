@@ -31,6 +31,7 @@ export const MESSAGES = {
   // product messages  ────────────────────────────────────────────────────────────────────────
   PRODUCT_SLUG_CONFLICT: 'Product with this name already exists',
   INSUFFICIENT_STOCK: 'Insufficient stock for requested quantity',
+  IMAGE_REQUIRED: 'Image is required',
 
   // cart messages  ────────────────────────────────────────────────────────────────────────
   CART_ITEM_NOT_FOUND: 'Cart item not found',
