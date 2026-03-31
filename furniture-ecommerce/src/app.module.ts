@@ -11,6 +11,7 @@ import { UsersModule } from '@/modules/users/users.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ProductsModule } from './modules/products/products.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AppService } from './app.service';
     UserIdentitiesModule,
     AuthModule,
     CategoriesModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
