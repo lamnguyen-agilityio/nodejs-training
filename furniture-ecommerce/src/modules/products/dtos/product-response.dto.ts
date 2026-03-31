@@ -6,7 +6,7 @@ import { CategoryResponseDto } from '@/modules/categories/dtos';
 import type { Product } from '../entities/product.entity';
 
 export class ProductResponseDto {
-  @ApiProperty()
+  @ApiProperty({ example: '019d2eb0-cad6-72e1-9149-cbec8767a59b' })
   @Expose()
   id: string;
 
