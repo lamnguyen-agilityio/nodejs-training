@@ -12,12 +12,14 @@ import {
 } from '@nestjs/common';
 import {
   ApiBody,
+  ApiCreatedResponse,
   ApiConflictResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiForbiddenResponse,
 } from '@nestjs/swagger';
 
 import { Role } from '@/common/enums';
@@ -56,7 +58,8 @@ export class CategoriesController {
   @AuthRoles(Role.Admin)
   @ApiOperation({ summary: 'Create category (Admin)' })
   @ApiBody({ type: CreateCategoryDto })
-  @ApiOkResponse({ type: CategoryResponseDto })
+  @ApiCreatedResponse({ type: CategoryResponseDto })
+  @ApiForbiddenResponse({ description: 'You are not authorized to create this category' })
   @ApiConflictResponse({ description: 'Category name already exists' })
   async create(@Body() dto: CreateCategoryDto): Promise<CategoryResponseDto> {
     const category = await this.categoriesService.create(dto);
@@ -68,6 +71,7 @@ export class CategoriesController {
   @ApiOperation({ summary: 'Update category (Admin)' })
   @ApiBody({ type: UpdateCategoryDto })
   @ApiOkResponse({ type: CategoryResponseDto })
+  @ApiForbiddenResponse({ description: 'You are not authorized to update this category' })
   @ApiNotFoundResponse({ description: 'Category not found' })
   @ApiConflictResponse({ description: 'Category name already exists' })
   async update(
@@ -83,6 +87,7 @@ export class CategoriesController {
   @AuthRoles(Role.Admin)
   @ApiOperation({ summary: 'Delete category (Admin)' })
   @ApiNoContentResponse()
+  @ApiForbiddenResponse({ description: 'You are not authorized to delete this category' })
   @ApiNotFoundResponse({ description: 'Category not found' })
   async softDelete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.categoriesService.softDelete(id);
