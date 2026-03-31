@@ -54,6 +54,10 @@ export class CartService {
       throw new BadRequestException(MESSAGES.INSUFFICIENT_STOCK);
     }
 
+    if (dto.quantity < 1) {
+      throw new BadRequestException('Quantity must be greater than 0');
+    }
+
     return this.cartRepository.updateQuantity(item, dto.quantity);
   }
 
