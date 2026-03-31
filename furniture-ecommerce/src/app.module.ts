@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '@/common/logger/logger.module';
 import { envSchema, appConfig, databaseConfig } from '@/config';
 import { AuthModule } from '@/modules/auth/auth.module';
+import { CartModule } from '@/modules/cart/cart.module';
 import { CategoriesModule } from '@/modules/categories/categories.module';
 import { ProductsModule } from '@/modules/products/products.module';
 import { UserIdentitiesModule } from '@/modules/user-identities/user-identities.module';
@@ -39,6 +40,7 @@ import { AppService } from './app.service';
     AuthModule,
     CategoriesModule,
     ProductsModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService],
