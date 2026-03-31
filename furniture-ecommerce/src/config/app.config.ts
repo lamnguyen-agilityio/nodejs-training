@@ -14,6 +14,7 @@ export const appConfig = registerAs('app', () => ({
   apiPrefix: API.PREFIX,
   defaultVersion: API.VERSION.DEFAULT,
   logLevel: process.env.LOG_LEVEL,
+  imgbbApiKey: process.env.IMGBB_API_KEY!,
 }));
 
 /**
