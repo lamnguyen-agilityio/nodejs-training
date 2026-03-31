@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
-import { MESSAGES } from '@/common/constants';
+import { MESSAGES, NUMERIC } from '@/common/constants';
 import { ProductsService } from '@/modules/products/products.service';
 import type { User } from '@/modules/users/entities/user.entity';
 import { UsersService } from '@/modules/users/users.service';
@@ -54,8 +54,8 @@ export class CartService {
       throw new BadRequestException(MESSAGES.INSUFFICIENT_STOCK);
     }
 
-    if (dto.quantity < 1) {
-      throw new BadRequestException('Quantity must be greater than 0');
+    if (dto.quantity < NUMERIC.QUANTITY_MIN) {
+      throw new BadRequestException(MESSAGES.INVALID_QUANTITY);
     }
 
     return this.cartRepository.updateQuantity(item, dto.quantity);
