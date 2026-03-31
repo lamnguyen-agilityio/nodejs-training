@@ -11,6 +11,7 @@ export const envSchema = Joi.object({
     .valid(...Object.values(Environment))
     .required(),
   PORT: Joi.number().port().required(),
+  IMGBB_API_KEY: Joi.string().required(),
 
   // database.
   POSTGRES_HOST: Joi.string().hostname().required(),
