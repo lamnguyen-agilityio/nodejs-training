@@ -29,7 +29,7 @@ export class CategoryResponseDto {
   updatedAt: Date;
 
   static from(category: Category): CategoryResponseDto {
-    return plainToInstance(CategoryResponseDto, category);
+    return plainToInstance(CategoryResponseDto, category, { excludeExtraneousValues: true });
   }
 
   static fromMany(categories: Category[]): CategoryResponseDto[] {
