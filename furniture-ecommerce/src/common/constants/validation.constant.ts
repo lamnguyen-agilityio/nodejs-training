@@ -9,6 +9,9 @@ export const LENGTH = {
 
   // ── description / long text ────────────────────────────────────────────────
   DESCRIPTION: 500,
+
+  // ── url / long text ────────────────────────────────────────────────────────
+  URL_MAX: 200,
 } as const;
 
 /**
