@@ -2,8 +2,8 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
-import { NUMERIC } from '@/common/constants';
 import { Retryable } from '@/common/database';
+import { resolvePagination } from '@/common/utils';
 
 import { ProductEntity, type Product } from './entities/product.entity';
 import type {
@@ -27,9 +27,7 @@ export class ProductsRepository {
    * paginates the results.
    */
   async findAll(dto: FindProductsDto): Promise<PaginatedProducts> {
-    const page = dto.page ?? NUMERIC.PAGE_MIN;
-    const limit = dto.limit ?? NUMERIC.LIMIT_DEFAULT;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = resolvePagination(dto);
 
     const where: Record<string, unknown> = { deletedAt: null };
 
