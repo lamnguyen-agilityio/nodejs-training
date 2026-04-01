@@ -36,4 +36,5 @@ export const MESSAGES = {
   // cart messages  ────────────────────────────────────────────────────────────────────────
   CART_ITEM_NOT_FOUND: 'Cart item not found',
   INVALID_QUANTITY: 'Quantity must be greater than 0',
+  CART_EMPTY: 'Cart is empty',
 } as const;

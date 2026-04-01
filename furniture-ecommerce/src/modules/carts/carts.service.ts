@@ -5,7 +5,7 @@ import { ProductsService } from '@/modules/products/products.service';
 import type { User } from '@/modules/users/entities/user.entity';
 import { UsersService } from '@/modules/users/users.service';
 
-import { CartRepository } from './cart.repository';
+import { CartsRepository } from './carts.repository';
 import type { GuestCartItemDto } from './dtos';
 import type { CartItem } from './entities/cart-item.entity';
 import type { AddCartItem, UpdateCartItem } from './interfaces';
@@ -13,7 +13,7 @@ import type { AddCartItem, UpdateCartItem } from './interfaces';
 @Injectable()
 export class CartService {
   constructor(
-    private readonly cartRepository: CartRepository,
+    private readonly cartsRepository: CartsRepository,
     private readonly productsService: ProductsService,
     private readonly usersService: UsersService,
   ) {}
@@ -22,7 +22,7 @@ export class CartService {
    * get all cart items for a user.
    */
   async getCart(user: User): Promise<CartItem[]> {
-    return this.cartRepository.findByUser(user);
+    return this.cartsRepository.findByUser(user);
   }
 
   /**
@@ -32,7 +32,7 @@ export class CartService {
     const product = await this.productsService.findOne({ id: dto.productId });
 
     // check existing quantity in cart to avoid exceeding stock
-    const existing = await this.cartRepository.findItem(user, product);
+    const existing = await this.cartsRepository.findItem(user, product);
     const currentQty = existing?.quantity ?? 0;
     const totalQty = currentQty + dto.quantity;
 
@@ -40,7 +40,7 @@ export class CartService {
       throw new BadRequestException(MESSAGES.INSUFFICIENT_STOCK);
     }
 
-    return this.cartRepository.addItem(user, product, dto.quantity);
+    return this.cartsRepository.addItem(user, product, dto.quantity);
   }
 
   /**
@@ -58,7 +58,7 @@ export class CartService {
       throw new BadRequestException(MESSAGES.INVALID_QUANTITY);
     }
 
-    return this.cartRepository.updateQuantity(item, dto.quantity);
+    return this.cartsRepository.updateQuantity(item, dto.quantity);
   }
 
   /**
@@ -66,14 +66,14 @@ export class CartService {
    */
   async removeItem(user: User, itemId: string): Promise<void> {
     const item = await this.findCartItem(user, itemId);
-    await this.cartRepository.removeItem(item);
+    await this.cartsRepository.removeItem(item);
   }
 
   /**
    * clear the entire cart for a user.
    */
   async clearCart(user: User): Promise<void> {
-    await this.cartRepository.clearCart(user);
+    await this.cartsRepository.clearCart(user);
   }
 
   /**
@@ -100,13 +100,13 @@ export class CartService {
     // filter out items where stock is 0
     const validItems = resolvedItems.filter((item) => item.quantity > 0);
 
-    await this.cartRepository.mergeSessionCart(user, validItems);
+    await this.cartsRepository.mergeSessionCart(user, validItems);
   }
 
   // ─── private ──────────────────────────────────────────────────────────────
 
   private async findCartItem(user: User, itemId: string): Promise<CartItem> {
-    const items = await this.cartRepository.findByUser(user);
+    const items = await this.cartsRepository.findByUser(user);
     const item = items.find((i) => i.id === itemId);
     if (!item) throw new NotFoundException(MESSAGES.CART_ITEM_NOT_FOUND);
 

@@ -2,7 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, Min } from 'class-validator';
 
 import { NUMERIC } from '@/common/constants';
-import type { UpdateCartItem } from '@/modules/cart/interfaces';
+
+import type { UpdateCartItem } from '../interfaces';
 
 export class UpdateCartItemDto implements UpdateCartItem {
   @ApiProperty({ example: 3 })

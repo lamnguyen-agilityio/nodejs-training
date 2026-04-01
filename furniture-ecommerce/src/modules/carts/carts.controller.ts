@@ -25,7 +25,7 @@ import { CurrentUser } from '@/modules/auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@/modules/auth/interfaces';
 import { UsersService } from '@/modules/users/users.service';
 
-import { CartService } from './cart.service';
+import { CartService } from './carts.service';
 import {
   AddCartItemDto,
   CartItemResponseDto,
@@ -37,7 +37,7 @@ import {
 @ApiTags('cart')
 @Controller('cart')
 @Auth()
-export class CartController {
+export class CartsController {
   constructor(
     private readonly cartService: CartService,
     private readonly usersService: UsersService,
