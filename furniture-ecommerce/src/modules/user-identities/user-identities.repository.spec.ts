@@ -58,6 +58,7 @@ const mockEm = {
   persist: jest.fn(),
   flush: jest.fn(),
   assign: jest.fn(),
+  clear: jest.fn(),
 } satisfies Partial<jest.Mocked<EntityManager>>;
 
 const mockLogger = {
@@ -246,6 +247,7 @@ describe('UserIdentitiesRepository', () => {
 
     it('should propagate error when flush fails on create', async () => {
       const data = makeUpsertData();
+      mockEm.clear.mockReturnValue(undefined);
       mockEm.findOne.mockResolvedValue(null);
       mockEm.create.mockReturnValue(makeIdentity());
       mockEm.flush.mockRejectedValue(new Error('flush failed'));

@@ -35,6 +35,9 @@ export class UsersRepository {
    */
   @Retryable()
   async create(data: Pick<User, 'email' | 'name' | 'role'>): Promise<User> {
+    // clear any pending changes from previous failed attempts
+    this.em.clear();
+
     const user = this.em.create(UserEntity, data);
     this.em.persist(user);
     await this.em.flush();

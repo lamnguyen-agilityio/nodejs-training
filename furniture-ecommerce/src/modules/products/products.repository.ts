@@ -89,6 +89,9 @@ export class ProductsRepository {
    */
   @Retryable()
   async create(data: CreateProductData): Promise<Product> {
+    // clear any pending changes from previous failed attempts
+    this.em.clear();
+
     const product = this.em.create(ProductEntity, data);
     this.em.persist(product);
     await this.em.flush();
