@@ -34,8 +34,8 @@ import {
   UpdateCartItemDto,
 } from './dtos';
 
-@ApiTags('cart')
-@Controller('cart')
+@ApiTags('carts')
+@Controller('carts')
 @Auth()
 export class CartsController {
   constructor(
