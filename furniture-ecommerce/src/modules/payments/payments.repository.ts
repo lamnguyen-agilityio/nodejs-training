@@ -41,6 +41,9 @@ export class PaymentsRepository {
    */
   @Retryable()
   async create(data: CreatePaymentData): Promise<Payment> {
+    // clear any pending changes from previous failed attempts
+    this.em.clear();
+
     const payment = this.em.create(PaymentEntity, {
       ...data,
       status: PaymentStatus.Pending,
