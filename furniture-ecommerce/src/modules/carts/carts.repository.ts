@@ -10,12 +10,12 @@ import { CartItemEntity, type CartItem } from './entities/cart-item.entity';
 import type { GuestCartItem } from './interfaces';
 
 @Injectable()
-export class CartRepository {
+export class CartsRepository {
   constructor(
     private readonly em: EntityManager,
     private readonly logger: PinoLogger,
   ) {
-    this.logger.setContext(CartRepository.name);
+    this.logger.setContext(CartsRepository.name);
   }
 
   /*
