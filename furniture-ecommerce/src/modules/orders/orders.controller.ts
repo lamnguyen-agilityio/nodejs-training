@@ -47,8 +47,7 @@ export class OrdersController {
   @Get()
   @ApiOperation({
     summary: 'List orders',
-    description:
-      'Users see their own orders. ' + 'Admins see all orders with optional status filter.',
+    description: 'Users see their own orders. Admins see all orders with optional status filter.',
   })
   @ApiOkResponse({ type: PaginatedOrdersDto })
   async findOrders(
@@ -67,7 +66,7 @@ export class OrdersController {
   @Get(':id')
   @ApiOperation({
     summary: 'Get order details',
-    description: 'Users can only view their own orders. ' + 'Admins can view any order.',
+    description: 'Users can only view their own orders. Admins can view any order.',
   })
   @ApiOkResponse({ type: OrderResponseDto })
   @ApiForbiddenResponse({ description: 'Order does not belong to the user' })
