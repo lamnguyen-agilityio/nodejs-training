@@ -24,7 +24,7 @@ export const PaymentEntity = defineEntity({
     provider: p.string(),
 
     // the payment intent ID from the provider.
-    intentId: p.string(),
+    intentId: p.string().nullable(),
 
     // the checkout session ID from the provider.
     checkoutSessionId: p.string(),
