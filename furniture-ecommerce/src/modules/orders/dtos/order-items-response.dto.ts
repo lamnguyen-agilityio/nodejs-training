@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, plainToInstance } from 'class-transformer';
 
-import { calculateTotal } from '@/common/utils/price.util';
+import { NUMERIC } from '@/common/constants';
 
 import type { OrderItem } from '../entities/order-item.entity';
 
@@ -34,7 +34,7 @@ export class OrderItemResponseDto {
         productName: item.product.name,
         priceAtPurchase: item.priceAtPurchase,
         quantity: item.quantity,
-        subtotal: calculateTotal(Number(item.priceAtPurchase), item.quantity),
+        subtotal: (Number(item.priceAtPurchase) * item.quantity).toFixed(NUMERIC.DECIMAL_PLACES),
       },
       { excludeExtraneousValues: true },
     );
