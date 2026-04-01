@@ -24,4 +24,5 @@ export const NUMERIC = {
   LIMIT_DEFAULT: 20,
   QUANTITY_MIN: 1,
   PRICE_MIN: 0,
+  DECIMAL_PLACES: 2,
 } as const;
