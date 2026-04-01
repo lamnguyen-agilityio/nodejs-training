@@ -39,3 +39,13 @@ export interface CreatePaymentData {
   amount: string;
   currency: string;
 }
+
+/**
+ * the data required to attach a session to a payment record.
+ */
+export interface AttachSessionData {
+  checkoutSessionId: string;
+  intentId: string | null;
+  amount: string;
+  currency: string;
+}

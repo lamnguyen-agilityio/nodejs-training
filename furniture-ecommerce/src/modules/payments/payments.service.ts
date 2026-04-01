@@ -8,15 +8,14 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
 
-import { MESSAGES } from '@/common/constants';
+import { MESSAGES, NUMERIC } from '@/common/constants';
 import { OrderStatus, PaymentStatus } from '@/common/enums';
 import type { AppConfig } from '@/config';
 import type { AuthenticatedUser } from '@/modules/auth/interfaces';
 import type { OrderWithItems } from '@/modules/orders/interfaces';
 import { OrdersRepository } from '@/modules/orders/orders.repository';
-import { ProductEntity } from '@/modules/products/entities/product.entity';
 
-import type { Payment } from './entities/payment.entity';
+import { PaymentEntity, type Payment } from './entities/payment.entity';
 import { PaymentProviderService } from './payment-provider.service';
 import { PaymentsRepository } from './payments.repository';
 
@@ -34,51 +33,55 @@ export class PaymentsService {
   }
 
   /**
-   * validates order ownership and status, handles duplicate sessions,
-   * checks remaining stock before creating a Stripe session.
+   * uses createOrClaimPending to atomically claim a pending payment record
+   * before calling the external provider — concurrent callers will observe
+   * the claimed record and reuse the same session rather than creating two.
    */
   async createCheckout(
     authUser: AuthenticatedUser,
     orderId: string,
   ): Promise<{ checkoutUrl: string }> {
-    const order = await this.findOrderForUser(authUser.userId, orderId);
+    const order = await this.findOwnedOrder(authUser.userId, orderId);
+    this.assertOrderIsPending(order);
 
-    // duplicate check — reuse existing pending session
-    const existing = await this.paymentsRepository.findByOrder(order.entity);
-    if (existing) {
-      if (existing.status === PaymentStatus.Pending) {
-        this.logger.info({ orderId }, 'Reusing existing pending payment session');
-        const session = await this.paymentProvider.retrieveSession(existing.checkoutSessionId);
-
-        return { checkoutUrl: session.checkoutUrl };
-      }
-
-      throw new ConflictException(`Order already has a payment with status: ${existing.status}`);
-    }
-
-    // stock validation before charging Stripe
+    // stock validation before touching the provider
     for (const item of order.orderItems) {
       if (item.product.quantityInStock < item.quantity) {
         throw new BadRequestException(`${item.product.name}: ${MESSAGES.INSUFFICIENT_STOCK}`);
       }
     }
 
+    // unique constraint on (order_id, status=pending) prevents two records
+    const { payment, isNew } = await this.paymentsRepository.createOrClaimPending(
+      order.entity,
+      this.paymentProvider.providerName,
+    );
+
+    // reuse existing session if already claimed by a concurrent request
+    if (!isNew && payment.checkoutSessionId) {
+      this.logger.info({ orderId }, 'Reusing existing pending payment session');
+      const session = await this.paymentProvider.retrieveSession(payment.checkoutSessionId);
+      return { checkoutUrl: session.checkoutUrl };
+    }
+
+    // payment record exists but has a non-pending status
+    if (!isNew && this.isFinalStatus(payment.status)) {
+      throw new ConflictException(`Order already has a payment with status: ${payment.status}`);
+    }
+
     const config = this.configService.getOrThrow<AppConfig>('app');
     const urls = {
-      successUrl: `${config.appUrl}/payments/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${config.appUrl}/payments/cancel?session_id={CHECKOUT_SESSION_ID}`,
+      successUrl: `${config.frontendUrl}/payments/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${config.frontendUrl}/payments/cancel?session_id={CHECKOUT_SESSION_ID}`,
     };
 
     const session = await this.paymentProvider.createCheckoutSession(order, urls);
 
-    await this.paymentsRepository.create({
-      order: order.entity,
-      provider: this.paymentProvider.providerName,
-      // intentId is null at session creation — Stripe only assigns a Payment Intent
-      // after the user submits card details. Updated on webhook completed event.
-      intentId: null,
+    // update the claimed record with the provider session details
+    await this.paymentsRepository.attachSession(payment, {
       checkoutSessionId: session.sessionId,
-      amount: (session.amount / 100).toFixed(2),
+      intentId: null,
+      amount: (session.amount / 100).toFixed(NUMERIC.DECIMAL_PLACES),
       currency: session.currency,
     });
 
@@ -86,8 +89,8 @@ export class PaymentsService {
   }
 
   /**
-   * handle cancel redirect from Stripe.
-   * rollback order status and restore stock.
+   * re-loads payment + order inside the transaction.
+   * status check and rollback happen atomically.
    */
   async handleCancel(sessionId: string): Promise<void> {
     const payment = await this.paymentsRepository.findBySessionId(sessionId);
@@ -104,11 +107,26 @@ export class PaymentsService {
       return;
     }
 
-    await this.rollbackStock(payment.order as unknown as OrderWithItems);
-
     await this.em.transactional(async (txEm) => {
-      txEm.assign(payment, { status: PaymentStatus.Cancelled });
-      txEm.assign(payment.order, { status: OrderStatus.Cancelled });
+      // re-load inside transaction — avoids stale entity and the as unknown as cast
+      const freshPayment = await txEm.findOneOrFail(
+        PaymentEntity,
+        { checkoutSessionId: sessionId },
+        { populate: ['order'] },
+      );
+
+      // double-check status inside transaction to prevent race
+      if (this.isFinalStatus(freshPayment.status)) {
+        return;
+      }
+
+      const order = await this.ordersRepository.findOne(freshPayment.order.id);
+      if (!order) return;
+
+      await this.rollbackStockAtomic(txEm, order);
+
+      txEm.assign(freshPayment, { status: PaymentStatus.Cancelled });
+      txEm.assign(freshPayment.order, { status: OrderStatus.Cancelled });
       await txEm.flush();
     });
 
@@ -116,10 +134,10 @@ export class PaymentsService {
   }
 
   /**
-   * get payment status for an order.
+   * allows reading payment status for paid/failed/cancelled orders.
    */
   async getPaymentStatus(authUser: AuthenticatedUser, orderId: string): Promise<Payment> {
-    const order = await this.findOrderForUser(authUser.userId, orderId);
+    const order = await this.findOwnedOrder(authUser.userId, orderId);
     const payment = await this.paymentsRepository.findByOrder(order.entity);
 
     if (!payment) {
@@ -130,25 +148,35 @@ export class PaymentsService {
   }
 
   /**
-   * shared rollback helper — restores stock for all order items.
-   * used by cancel, failed, and expired handlers.
+   * uses quantity_in_stock = quantity_in_stock + qty to avoid overwriting
+   * concurrent changes. accepts txEm to share the caller's transaction.
    */
-  async rollbackStock(order: OrderWithItems): Promise<void> {
+  async rollbackStockAtomic(txEm: EntityManager, order: OrderWithItems): Promise<void> {
     this.logger.info({ orderId: order.id }, 'Rolling back stock for order');
 
     for (const item of order.orderItems) {
-      await this.em.nativeUpdate(
-        ProductEntity,
-        { id: item.product.id },
-        { quantityInStock: item.product.quantityInStock + item.quantity },
-      );
+      await txEm
+        .getConnection()
+        .execute(`UPDATE products SET quantity_in_stock = quantity_in_stock + ? WHERE id = ?`, [
+          item.quantity,
+          item.product.id,
+        ]);
     }
   }
 
   /**
-   * finds an order for the authenticated user.
+   * returns true if the payment status is final (succeeded, failed, or cancelled).
    */
-  private async findOrderForUser(userId: string, orderId: string): Promise<OrderWithItems> {
+  isFinalStatus(status: PaymentStatus): boolean {
+    return [PaymentStatus.Succeeded, PaymentStatus.Failed, PaymentStatus.Cancelled].includes(
+      status,
+    );
+  }
+
+  /**
+   * used by both createCheckout and getPaymentStatus.
+   */
+  private async findOwnedOrder(userId: string, orderId: string): Promise<OrderWithItems> {
     const order = await this.ordersRepository.findOne(orderId);
 
     if (!order) {
@@ -159,21 +187,17 @@ export class PaymentsService {
       throw new BadRequestException('Order does not belong to you');
     }
 
+    return order;
+  }
+
+  /**
+   * pending assertion extracted — only called from createCheckout.
+   */
+  private assertOrderIsPending(order: OrderWithItems): void {
     if (order.status !== OrderStatus.Pending) {
       throw new BadRequestException(
         `Order status is '${order.status}' — only pending orders can be checked out`,
       );
     }
-
-    return order;
-  }
-
-  /**
-   * checks if a payment status is final (succeeded, failed, or cancelled).
-   */
-  isFinalStatus(status: PaymentStatus): boolean {
-    return [PaymentStatus.Succeeded, PaymentStatus.Failed, PaymentStatus.Cancelled].includes(
-      status,
-    );
   }
 }
