@@ -3,7 +3,7 @@ import type { EntityManager } from '@mikro-orm/postgresql';
 import { PinoLogger } from 'nestjs-pino';
 
 import { Role } from '@/common/enums';
-import { createMockEm, createMockLogger } from '@/tests';
+import { createMockEm, createMockLogger } from '@/test';
 
 import type { User } from './entities/user.entity';
 import { UsersRepository } from './users.repository';

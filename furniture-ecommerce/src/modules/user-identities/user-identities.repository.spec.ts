@@ -4,7 +4,7 @@ import { PinoLogger } from 'nestjs-pino';
 
 import { AuthProvider, SocialProvider } from '@/common/enums';
 import type { User } from '@/modules/users/entities/user.entity';
-import { createMockEm, createMockLogger } from '@/tests';
+import { createMockEm, createMockLogger } from '@/test';
 
 import type { UserIdentity, UserIdentityWithUser } from './entities/user-identity.entity';
 import type { UpsertIdentity } from './interfaces';

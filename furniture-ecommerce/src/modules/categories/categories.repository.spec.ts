@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import type { EntityManager } from '@mikro-orm/postgresql';
 import { PinoLogger } from 'nestjs-pino';
 
-import { createMockEm, createMockLogger } from '@/tests/mocks';
+import { createMockEm, createMockLogger } from '@/test/mocks';
 
 import { CategoriesRepository } from './categories.repository';
 import type { Category } from './entities/category.entity';

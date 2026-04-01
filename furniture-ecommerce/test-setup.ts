@@ -20,6 +20,7 @@ jest.mock('@nestjs/swagger', () => ({
   ApiConflictResponse: jest.fn(() => () => {}),
   ApiNoContentResponse: jest.fn(() => () => {}),
   ApiConsumes: jest.fn(() => () => {}),
+  ApiBadRequestResponse: jest.fn(() => () => {}),
 }));
 
 jest.mock('jwks-rsa', () => ({
