@@ -131,6 +131,37 @@ export class OrdersRepository {
   }
 
   /**
+   * create order + order items using a provided transactional EntityManager.
+   * called from OrdersService.createFromCart to share the transaction context.
+   */
+  async createWithManager(
+    txEm: EntityManager,
+    user: User,
+    orderItems: OrderItemData[],
+    totalAmount: string,
+  ): Promise<OrderWithItems> {
+    const order = txEm.create(OrderEntity, {
+      user,
+      status: OrderStatus.Pending,
+      totalAmount,
+    });
+    txEm.persist(order);
+
+    for (const item of orderItems) {
+      const orderItem = txEm.create(OrderItemEntity, {
+        order,
+        product: item.product,
+        quantity: item.quantity,
+        priceAtPurchase: item.priceAtPurchase,
+      });
+      txEm.persist(orderItem);
+    }
+
+    await txEm.flush();
+    return (await this.findOne(order.id))!;
+  }
+
+  /**
    * private helper to attach order items to orders.
    */
   private async attachItems(orders: Order[]): Promise<OrderWithItems[]> {

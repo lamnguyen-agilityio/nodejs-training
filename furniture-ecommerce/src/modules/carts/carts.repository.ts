@@ -116,4 +116,14 @@ export class CartsRepository {
 
     await this.em.flush();
   }
+
+  /**
+   * clear cart using a provided transactional EntityManager.
+   * called from OrdersService to clear cart within the order transaction.
+   */
+  async clearCartWithManager(txEm: EntityManager, user: User): Promise<void> {
+    const items = await txEm.find(CartItemEntity, { user, deletedAt: null });
+    items.forEach((item) => txEm.assign(item, { deletedAt: new Date() }));
+    await txEm.flush();
+  }
 }
