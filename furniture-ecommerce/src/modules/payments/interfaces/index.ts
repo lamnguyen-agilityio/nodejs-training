@@ -16,7 +16,7 @@ export interface CheckoutSessionResult {
  */
 export interface WebhookEvent {
   type: string;
-  sessionId: string;
+  sessionId: string | null;
   intentId?: string;
 }
 

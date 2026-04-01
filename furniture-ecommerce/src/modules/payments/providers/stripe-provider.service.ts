@@ -16,6 +16,10 @@ import { PaymentProviderService } from '../payment-provider.service';
 @Injectable()
 export class StripeProviderService extends PaymentProviderService {
   readonly providerName = 'stripe';
+  readonly defaultCurrency = 'usd';
+
+  // session expires in 30 minutes
+  readonly expirationTime = Math.floor(Date.now() / 1000) + 30 * 60;
 
   private readonly stripe: Stripe;
   private readonly webhookSecret: string;
@@ -32,6 +36,9 @@ export class StripeProviderService extends PaymentProviderService {
     this.webhookSecret = config.stripeWebhookSecret;
   }
 
+  /**
+   * creates a checkout session for the given order.
+   */
   async createCheckoutSession(
     order: OrderWithItems,
     urls: CheckoutSessionUrls,
@@ -42,7 +49,7 @@ export class StripeProviderService extends PaymentProviderService {
       (item) => ({
         quantity: item.quantity,
         price_data: {
-          currency: 'usd',
+          currency: this.defaultCurrency,
           unit_amount: Math.round(Number(item.priceAtPurchase) * 100),
           product_data: {
             name: item.product.name,
@@ -51,15 +58,17 @@ export class StripeProviderService extends PaymentProviderService {
       }),
     );
 
-    const session = await this.stripe.checkout.sessions.create({
-      mode: 'payment',
-      line_items: lineItems,
-      success_url: urls.successUrl,
-      cancel_url: urls.cancelUrl,
-      metadata: { orderId: order.id },
-      // session expires in 30 minutes
-      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-    });
+    const session = await this.stripe.checkout.sessions.create(
+      {
+        mode: 'payment',
+        line_items: lineItems,
+        success_url: urls.successUrl,
+        cancel_url: urls.cancelUrl,
+        metadata: { orderId: order.id },
+        expires_at: this.expirationTime,
+      },
+      { idempotencyKey: `checkout_session:${order.id}` },
+    );
 
     if (!session.url) {
       this.logger.error({ orderId: order.id }, 'Stripe session created without URL');
@@ -73,25 +82,31 @@ export class StripeProviderService extends PaymentProviderService {
 
     return {
       sessionId: session.id,
-      intentId: session.payment_intent as string,
+      intentId: this.normalizeIntentId(session.payment_intent),
       checkoutUrl: session.url,
       amount: session.amount_total ?? 0,
-      currency: session.currency ?? 'usd',
+      currency: session.currency ?? this.defaultCurrency,
     };
   }
 
+  /**
+   * retrieves a checkout session by its ID.
+   */
   async retrieveSession(sessionId: string): Promise<CheckoutSessionResult> {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
 
     return {
       sessionId: session.id,
-      intentId: session.payment_intent as string,
+      intentId: this.normalizeIntentId(session.payment_intent),
       checkoutUrl: session.url ?? '',
       amount: session.amount_total ?? 0,
-      currency: session.currency ?? 'usd',
+      currency: session.currency ?? this.defaultCurrency,
     };
   }
 
+  /**
+   * verifies the signature of a Stripe webhook event.
+   */
   verifyWebhookSignature(payload: Buffer, signature: string): WebhookEvent {
     let event: Stripe.Event;
 
@@ -108,18 +123,37 @@ export class StripeProviderService extends PaymentProviderService {
     return { type: event.type, sessionId, intentId };
   }
 
-  // ─── private ──────────────────────────────────────────────────────────────
-
+  /**
+   * extracts the session ID from a Stripe event.
+   */
   private extractSessionId(event: Stripe.Event): string {
     const data = event.data.object;
+    const id = data['id'];
 
-    return (data['id'] as string) ?? (data['checkout_session'] as string) ?? '';
+    if (typeof id === 'string' && id.length > 0) return id;
+
+    const checkoutSession = data['checkout_session'];
+    if (typeof checkoutSession === 'string' && checkoutSession.length > 0) return checkoutSession;
+
+    throw new InternalServerErrorException(
+      'Unable to extract checkout session ID from Stripe event',
+    );
   }
 
+  /**
+   * extracts the intent ID from a Stripe event.
+   */
   private extractIntentId(event: Stripe.Event): string | undefined {
     const data = event.data.object;
     const intentId = data['payment_intent'];
 
     return typeof intentId === 'string' ? intentId : undefined;
+  }
+
+  /**
+   * normalizes the intent ID from a Stripe checkout session.
+   */
+  private normalizeIntentId(intent: Stripe.Checkout.Session['payment_intent']): string | null {
+    return typeof intent === 'string' ? intent : null;
   }
 }
