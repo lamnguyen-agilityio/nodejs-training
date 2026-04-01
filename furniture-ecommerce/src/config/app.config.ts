@@ -15,6 +15,9 @@ export const appConfig = registerAs('app', () => ({
   defaultVersion: API.VERSION.DEFAULT,
   logLevel: process.env.LOG_LEVEL,
   imgbbApiKey: process.env.IMGBB_API_KEY!,
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY!,
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
+  appUrl: process.env.FRONTEND_URL!,
 }));
 
 /**
