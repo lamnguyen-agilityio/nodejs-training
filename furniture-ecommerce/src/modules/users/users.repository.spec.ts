@@ -3,6 +3,7 @@ import type { EntityManager } from '@mikro-orm/postgresql';
 import { PinoLogger } from 'nestjs-pino';
 
 import { Role } from '@/common/enums';
+import { createMockEm, createMockLogger } from '@/tests';
 
 import type { User } from './entities/user.entity';
 import { UsersRepository } from './users.repository';
@@ -29,22 +30,8 @@ const makeCreateData = (): Pick<User, 'email' | 'name' | 'role'> => ({
 
 // ─── mocks ───────────────────────────────────────────────────────────────────
 
-const mockEm = {
-  findOne: jest.fn(),
-  create: jest.fn(),
-  persist: jest.fn(),
-  flush: jest.fn(),
-  assign: jest.fn(),
-  clear: jest.fn(),
-} satisfies Partial<jest.Mocked<EntityManager>>;
-
-const mockLogger = {
-  setContext: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-} satisfies Partial<jest.Mocked<PinoLogger>>;
+const mockEm = createMockEm();
+const mockLogger = createMockLogger();
 
 // ─── suite ───────────────────────────────────────────────────────────────────
 
