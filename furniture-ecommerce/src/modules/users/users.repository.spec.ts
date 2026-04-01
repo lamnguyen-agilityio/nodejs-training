@@ -35,6 +35,7 @@ const mockEm = {
   persist: jest.fn(),
   flush: jest.fn(),
   assign: jest.fn(),
+  clear: jest.fn(),
 } satisfies Partial<jest.Mocked<EntityManager>>;
 
 const mockLogger = {
@@ -174,6 +175,7 @@ describe('UsersRepository', () => {
 
     it('should propagate error when flush fails', async () => {
       const user = makeUser();
+      mockEm.clear.mockReturnValue(undefined);
       mockEm.assign.mockImplementation((u: User, data: Partial<User>) => Object.assign(u, data));
       mockEm.flush.mockRejectedValue(new Error('flush failed'));
 

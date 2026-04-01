@@ -58,6 +58,9 @@ export class UserIdentitiesRepository {
    */
   @Retryable()
   async create(data: UpsertIdentity): Promise<UserIdentity> {
+    // clear any pending changes from previous failed attempts
+    this.em.clear();
+
     const identity = this.em.create(UserIdentityEntity, data);
     this.em.persist(identity);
     await this.em.flush();

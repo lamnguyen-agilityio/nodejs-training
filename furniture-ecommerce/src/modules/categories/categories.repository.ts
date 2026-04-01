@@ -46,6 +46,9 @@ export class CategoriesRepository {
    */
   @Retryable()
   async create(data: CreateCategory & { slug: string }): Promise<Category> {
+    // clear any pending changes from previous failed attempts
+    this.em.clear();
+
     const category = this.em.create(CategoryEntity, data);
     this.em.persist(category);
     await this.em.flush();
