@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { MESSAGES } from '@/common/constants';
+import { MESSAGES, NUMERIC } from '@/common/constants';
 import { OrderStatus, Role } from '@/common/enums';
 import type { AuthenticatedUser } from '@/modules/auth/interfaces';
 import { CartsRepository } from '@/modules/carts/carts.repository';
@@ -78,7 +78,7 @@ export class OrdersService {
         return sum + priceCents * item.quantity;
       }, 0);
 
-      const totalAmount = (totalCents / 100).toFixed(2);
+      const totalAmount = (totalCents / 100).toFixed(NUMERIC.DECIMAL_PLACES);
 
       // ── 3. insert order + order_items using transactional em ──────────────
       const order = await this.ordersRepository.createWithManager(
