@@ -84,6 +84,9 @@ export class OrdersRepository {
     orderItems: OrderItemData[],
     totalAmount: string,
   ): Promise<OrderWithItems> {
+    // clear any pending changes from previous failed attempts
+    this.em.clear();
+
     const order = this.em.create(OrderEntity, {
       user,
       status: OrderStatus.Pending,
@@ -102,8 +105,13 @@ export class OrdersRepository {
     }
 
     await this.em.flush();
+    const created = await this.findOne(order.id);
 
-    return (await this.findOne(order.id))!;
+    if (!created) {
+      throw new Error(`Order ${order.id} not found after creation`);
+    }
+
+    return created;
   }
 
   /**
@@ -113,8 +121,13 @@ export class OrdersRepository {
   async updateStatus(order: OrderWithItems, status: OrderStatus): Promise<OrderWithItems> {
     this.em.assign(order.entity, { status });
     await this.em.flush();
+    const updated = await this.findOne(order.id);
 
-    return (await this.findOne(order.id))!;
+    if (!updated) {
+      throw new Error(`Order ${order.id} not found after status update`);
+    }
+
+    return updated;
   }
 
   /**
