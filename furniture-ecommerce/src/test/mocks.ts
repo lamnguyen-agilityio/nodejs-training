@@ -35,6 +35,7 @@ export const createMockEm = (): jest.Mocked<
     | 'remove'
     | 'nativeUpdate'
     | 'fork'
+    | 'transactional'
   >
 > => ({
   find: jest.fn(),
@@ -48,6 +49,7 @@ export const createMockEm = (): jest.Mocked<
   remove: jest.fn(),
   nativeUpdate: jest.fn(),
   fork: jest.fn(),
+  transactional: jest.fn(),
 });
 
 /**
