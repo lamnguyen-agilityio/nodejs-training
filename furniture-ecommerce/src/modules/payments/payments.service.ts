@@ -1,0 +1,203 @@
+import { EntityManager } from '@mikro-orm/postgresql';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
+
+import { MESSAGES, NUMERIC } from '@/common/constants';
+import { OrderStatus, PaymentStatus } from '@/common/enums';
+import type { AppConfig } from '@/config';
+import type { AuthenticatedUser } from '@/modules/auth/interfaces';
+import type { OrderWithItems } from '@/modules/orders/interfaces';
+import { OrdersRepository } from '@/modules/orders/orders.repository';
+
+import { PaymentEntity, type Payment } from './entities/payment.entity';
+import { PaymentProviderService } from './payment-provider.service';
+import { PaymentsRepository } from './payments.repository';
+
+@Injectable()
+export class PaymentsService {
+  constructor(
+    private readonly em: EntityManager,
+    private readonly configService: ConfigService,
+    private readonly logger: PinoLogger,
+    private readonly paymentsRepository: PaymentsRepository,
+    private readonly ordersRepository: OrdersRepository,
+    private readonly paymentProvider: PaymentProviderService,
+  ) {
+    this.logger.setContext(PaymentsService.name);
+  }
+
+  /**
+   * uses createOrClaimPending to atomically claim a pending payment record
+   * before calling the external provider — concurrent callers will observe
+   * the claimed record and reuse the same session rather than creating two.
+   */
+  async createCheckout(
+    authUser: AuthenticatedUser,
+    orderId: string,
+  ): Promise<{ checkoutUrl: string }> {
+    const order = await this.findOwnedOrder(authUser.userId, orderId);
+    this.assertOrderIsPending(order);
+
+    // stock validation before touching the provider
+    for (const item of order.orderItems) {
+      if (item.product.quantityInStock < item.quantity) {
+        throw new BadRequestException(`${item.product.name}: ${MESSAGES.INSUFFICIENT_STOCK}`);
+      }
+    }
+
+    // unique constraint on (order_id, status=pending) prevents two records
+    const { payment, isNew } = await this.paymentsRepository.createOrClaimPending(
+      order.entity,
+      this.paymentProvider.providerName,
+    );
+
+    // reuse existing session if already claimed by a concurrent request
+    if (!isNew && payment.checkoutSessionId) {
+      this.logger.info({ orderId }, 'Reusing existing pending payment session');
+      const session = await this.paymentProvider.retrieveSession(payment.checkoutSessionId);
+      return { checkoutUrl: session.checkoutUrl };
+    }
+
+    // payment record exists but has a non-pending status
+    if (!isNew && this.isFinalStatus(payment.status)) {
+      throw new ConflictException(`Order already has a payment with status: ${payment.status}`);
+    }
+
+    const config = this.configService.getOrThrow<AppConfig>('app');
+    const urls = {
+      successUrl: `${config.frontendUrl}/payments/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${config.frontendUrl}/payments/cancel?session_id={CHECKOUT_SESSION_ID}`,
+    };
+
+    const session = await this.paymentProvider.createCheckoutSession(order, urls);
+
+    // update the claimed record with the provider session details
+    await this.paymentsRepository.attachSession(payment, {
+      checkoutSessionId: session.sessionId,
+      intentId: null,
+      amount: (session.amount / 100).toFixed(NUMERIC.DECIMAL_PLACES),
+      currency: session.currency,
+    });
+
+    return { checkoutUrl: session.checkoutUrl };
+  }
+
+  /**
+   * re-loads payment + order inside the transaction.
+   * status check and rollback happen atomically.
+   */
+  async handleCancel(sessionId: string): Promise<void> {
+    const payment = await this.paymentsRepository.findBySessionId(sessionId);
+    if (!payment) {
+      this.logger.warn({ sessionId }, 'Payment not found for cancel session');
+      return;
+    }
+
+    if (this.isFinalStatus(payment.status)) {
+      this.logger.info(
+        { sessionId, status: payment.status },
+        'Payment already in final status — skipping cancel',
+      );
+      return;
+    }
+
+    await this.em.transactional(async (txEm) => {
+      // re-load inside transaction — avoids stale entity and the as unknown as cast
+      const freshPayment = await txEm.findOneOrFail(
+        PaymentEntity,
+        { checkoutSessionId: sessionId },
+        { populate: ['order'] },
+      );
+
+      // double-check status inside transaction to prevent race
+      if (this.isFinalStatus(freshPayment.status)) {
+        return;
+      }
+
+      const order = await this.ordersRepository.findOne(freshPayment.order.id);
+      if (!order) return;
+
+      await this.rollbackStockAtomic(txEm, order);
+
+      txEm.assign(freshPayment, { status: PaymentStatus.Cancelled });
+      txEm.assign(freshPayment.order, { status: OrderStatus.Cancelled });
+      await txEm.flush();
+    });
+
+    this.logger.info({ sessionId }, 'Payment cancelled and stock rolled back');
+  }
+
+  /**
+   * allows reading payment status for paid/failed/cancelled orders.
+   */
+  async getPaymentStatus(authUser: AuthenticatedUser, orderId: string): Promise<Payment> {
+    const order = await this.findOwnedOrder(authUser.userId, orderId);
+    const payment = await this.paymentsRepository.findByOrder(order.entity);
+
+    if (!payment) {
+      throw new NotFoundException(`No payment found for order ${orderId}`);
+    }
+
+    return payment;
+  }
+
+  /**
+   * uses quantity_in_stock = quantity_in_stock + qty to avoid overwriting
+   * concurrent changes. accepts txEm to share the caller's transaction.
+   */
+  async rollbackStockAtomic(txEm: EntityManager, order: OrderWithItems): Promise<void> {
+    this.logger.info({ orderId: order.id }, 'Rolling back stock for order');
+
+    for (const item of order.orderItems) {
+      await txEm
+        .getConnection()
+        .execute(`UPDATE products SET quantity_in_stock = quantity_in_stock + ? WHERE id = ?`, [
+          item.quantity,
+          item.product.id,
+        ]);
+    }
+  }
+
+  /**
+   * returns true if the payment status is final (succeeded, failed, or cancelled).
+   */
+  isFinalStatus(status: PaymentStatus): boolean {
+    return [PaymentStatus.Succeeded, PaymentStatus.Failed, PaymentStatus.Cancelled].includes(
+      status,
+    );
+  }
+
+  /**
+   * used by both createCheckout and getPaymentStatus.
+   */
+  private async findOwnedOrder(userId: string, orderId: string): Promise<OrderWithItems> {
+    const order = await this.ordersRepository.findOne(orderId);
+
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    if (order.user.id !== userId) {
+      throw new BadRequestException('Order does not belong to you');
+    }
+
+    return order;
+  }
+
+  /**
+   * pending assertion extracted — only called from createCheckout.
+   */
+  private assertOrderIsPending(order: OrderWithItems): void {
+    if (order.status !== OrderStatus.Pending) {
+      throw new BadRequestException(
+        `Order status is '${order.status}' — only pending orders can be checked out`,
+      );
+    }
+  }
+}
