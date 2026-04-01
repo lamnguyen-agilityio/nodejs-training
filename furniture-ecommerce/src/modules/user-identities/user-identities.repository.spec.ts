@@ -4,6 +4,7 @@ import { PinoLogger } from 'nestjs-pino';
 
 import { AuthProvider, SocialProvider } from '@/common/enums';
 import type { User } from '@/modules/users/entities/user.entity';
+import { createMockEm, createMockLogger } from '@/tests';
 
 import type { UserIdentity, UserIdentityWithUser } from './entities/user-identity.entity';
 import type { UpsertIdentity } from './interfaces';
@@ -51,23 +52,8 @@ const makeUpsertData = (overrides: Partial<UpsertIdentity> = {}): UpsertIdentity
 
 // ─── mocks ───────────────────────────────────────────────────────────────────
 
-const mockEm = {
-  findOne: jest.fn(),
-  find: jest.fn(),
-  create: jest.fn(),
-  persist: jest.fn(),
-  flush: jest.fn(),
-  assign: jest.fn(),
-  clear: jest.fn(),
-} satisfies Partial<jest.Mocked<EntityManager>>;
-
-const mockLogger = {
-  setContext: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-} satisfies Partial<jest.Mocked<PinoLogger>>;
+const mockEm = createMockEm();
+const mockLogger = createMockLogger();
 
 // ─── suite ───────────────────────────────────────────────────────────────────
 
