@@ -22,7 +22,6 @@ import { PaymentsRepository } from './payments.repository';
 @Injectable()
 export class PaymentsService {
   constructor(
-    private readonly em: EntityManager,
     private readonly configService: ConfigService,
     private readonly logger: PinoLogger,
     private readonly paymentsRepository: PaymentsRepository,
