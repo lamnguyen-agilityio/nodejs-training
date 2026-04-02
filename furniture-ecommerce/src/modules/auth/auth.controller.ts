@@ -36,7 +36,6 @@ export class AuthController {
   }
 
   @Get('provider')
-  @Auth()
   @ApiOperation({
     summary: 'Get active auth provider',
     description: 'Returns the currently active provider and all registered providers.',
