@@ -14,7 +14,7 @@ import {
 import { PaymentProviderService } from '../payment-provider.service';
 
 @Injectable()
-export class StripeProviderService extends PaymentProviderService {
+export class StripeProvider extends PaymentProviderService {
   readonly providerName = 'stripe';
   readonly defaultCurrency = 'usd';
 
@@ -26,7 +26,7 @@ export class StripeProviderService extends PaymentProviderService {
     private readonly logger: PinoLogger,
   ) {
     super();
-    this.logger.setContext(StripeProviderService.name);
+    this.logger.setContext(StripeProvider.name);
 
     const config = this.configService.getOrThrow<AppConfig>('app');
     this.stripe = new Stripe(config.stripeSecretKey);

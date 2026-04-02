@@ -7,7 +7,7 @@ import { PaymentProviderService } from './payment-provider.service';
 import { PaymentsController } from './payments.controller';
 import { PaymentsRepository } from './payments.repository';
 import { PaymentsService } from './payments.service';
-import { StripeProviderService } from './providers/stripe-provider.service';
+import { StripeProvider } from './providers/stripe.provider';
 
 @Module({
   imports: [AuthModule, OrdersModule],
@@ -15,12 +15,12 @@ import { StripeProviderService } from './providers/stripe-provider.service';
   providers: [
     PaymentsRepository,
     PaymentsService,
-    StripeProviderService,
+    StripeProvider,
     {
       provide: PaymentProviderService,
-      useExisting: StripeProviderService,
+      useExisting: StripeProvider,
     },
   ],
-  exports: [PaymentsService, PaymentsRepository, PaymentProviderService, StripeProviderService],
+  exports: [PaymentsService, PaymentsRepository, PaymentProviderService, StripeProvider],
 })
 export class PaymentsModule {}
