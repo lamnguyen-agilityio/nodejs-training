@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 
 import { AuthModule } from '@/modules/auth/auth.module';
 import { OrdersModule } from '@/modules/orders/orders.module';
-import { OrdersRepository } from '@/modules/orders/orders.repository';
 
 import { PaymentProviderService } from './payment-provider.service';
 import { PaymentsController } from './payments.controller';
@@ -15,13 +14,13 @@ import { StripeProviderService } from './providers/stripe-provider.service';
   controllers: [PaymentsController],
   providers: [
     PaymentsRepository,
-    OrdersRepository,
     PaymentsService,
+    StripeProviderService,
     {
       provide: PaymentProviderService,
-      useClass: StripeProviderService,
+      useExisting: StripeProviderService,
     },
   ],
-  exports: [PaymentsService],
+  exports: [PaymentsService, PaymentsRepository, PaymentProviderService, StripeProviderService],
 })
 export class PaymentsModule {}
