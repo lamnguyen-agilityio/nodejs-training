@@ -10,7 +10,6 @@ import { MESSAGES, NUMERIC } from '@/common/constants';
 import { OrderStatus, Role } from '@/common/enums';
 import type { AuthenticatedUser } from '@/modules/auth/interfaces';
 import { CartsRepository } from '@/modules/carts/carts.repository';
-import { ProductEntity } from '@/modules/products/entities/product.entity';
 import { UsersService } from '@/modules/users/users.service';
 
 import type {
@@ -32,12 +31,14 @@ export class OrdersService {
   ) {}
 
   /**
-   * checkout flow — fully transactional:
+   * checkout flow — transactional:
    *  1. validate cart not empty.
-   *  2. atomic stock deduction per product (conditional UPDATE, 0 rows = out of stock).
-   *  3. insert order + order_items.
-   *  4. clear cart.
-   * all steps share the same DB transaction — any failure rolls back everything.
+   *  2. insert order + order_items (no stock deduction here).
+   *  3. clear cart.
+   *
+   * stock is deducted later at POST /payments/:orderId/checkout
+   * using an atomic conditional UPDATE to handle race conditions.
+   * if payment expires or fails, stock is rolled back by the webhook handler.
    */
   async createFromCart(authUser: AuthenticatedUser): Promise<OrderWithItems> {
     const user = await this.usersService.findOne({ id: authUser.userId });
@@ -48,25 +49,7 @@ export class OrdersService {
     }
 
     return this.em.transactional(async (txEm) => {
-      // ── 1. atomic stock reservation ───────────────────────────────────────
-      // use conditional UPDATE to avoid race conditions:
-      // only deducts if current stock >= requested quantity.
-      for (const item of cartItems) {
-        const affected = await txEm.nativeUpdate(
-          ProductEntity,
-          {
-            id: item.product.id,
-            quantityInStock: { $gte: item.quantity },
-          },
-          { quantityInStock: item.product.quantityInStock - item.quantity },
-        );
-
-        if (affected === 0) {
-          throw new BadRequestException(`${item.product.name}: ${MESSAGES.INSUFFICIENT_STOCK}`);
-        }
-      }
-
-      // ── 2. compute total using integer cents to avoid float precision loss ─
+      // ── compute total using integer cents to avoid float precision loss ───
       const orderItems = cartItems.map((item) => ({
         product: item.product,
         quantity: item.quantity,
@@ -80,7 +63,7 @@ export class OrdersService {
 
       const totalAmount = (totalCents / 100).toFixed(NUMERIC.DECIMAL_PLACES);
 
-      // ── 3. insert order + order_items using transactional em ──────────────
+      // ── insert order + order_items ─────────────────────────────────────────
       const order = await this.ordersRepository.createWithManager(
         txEm,
         user,
@@ -88,7 +71,7 @@ export class OrdersService {
         totalAmount,
       );
 
-      // ── 4. clear cart within the same transaction ─────────────────────────
+      // ── clear cart within the same transaction ────────────────────────────
       await this.cartsRepository.clearCartWithManager(txEm, user);
 
       return order;
