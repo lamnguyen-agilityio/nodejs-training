@@ -12,6 +12,7 @@ import { PaymentsModule } from '@/modules/payments/payments.module';
 import { ProductsModule } from '@/modules/products/products.module';
 import { UserIdentitiesModule } from '@/modules/user-identities/user-identities.module';
 import { UsersModule } from '@/modules/users/users.module';
+import { WebhookModule } from '@/modules/webhook/webhook.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -45,6 +46,7 @@ import { AppService } from './app.service';
     CartsModule,
     OrdersModule,
     PaymentsModule,
+    WebhookModule,
   ],
   controllers: [AppController],
   providers: [AppService],
