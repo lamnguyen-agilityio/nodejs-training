@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  ParseUUIDPipe,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import {
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -50,19 +41,6 @@ export class PaymentsController {
     return CheckoutResponseDto.from(checkoutUrl);
   }
 
-  @Get('cancel')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Handle Stripe cancel redirect',
-    description:
-      'Called by Stripe when the user cancels or leaves the checkout page. ' +
-      'Rolls back order status and restores product stock. No auth required — Stripe redirects here.',
-  })
-  @ApiOkResponse({ description: 'Cancellation processed' })
-  async handleCancel(@Query('session_id') sessionId: string): Promise<void> {
-    await this.paymentsService.handleCancel(sessionId);
-  }
-
   @Get(':orderId')
   @Auth()
   @ApiOperation({
@@ -77,7 +55,8 @@ export class PaymentsController {
     @CurrentUser() authUser: AuthenticatedUser,
     @Param('orderId', ParseUUIDPipe) orderId: string,
   ): Promise<PaymentResponseDto> {
-    const payment = await this.paymentsService.getPaymentStatus(authUser, orderId);
-    return PaymentResponseDto.from(payment);
+    const { payment, checkoutUrl } = await this.paymentsService.getPaymentStatus(authUser, orderId);
+
+    return PaymentResponseDto.from(payment, checkoutUrl);
   }
 }
