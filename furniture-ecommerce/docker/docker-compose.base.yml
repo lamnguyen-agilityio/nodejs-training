@@ -15,7 +15,6 @@ services:
 
   api:
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       PORT: ${PORT}
     ports:
       - '${PORT}:${PORT}'
