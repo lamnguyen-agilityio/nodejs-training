@@ -21,6 +21,7 @@ import { Environment } from './common/enums';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
+    rawBody: true,
   });
   const reflector = app.get(Reflector);
   const { port, apiPrefix, nodeEnv } = app.get(ConfigService).getOrThrow<AppConfig>('app');
