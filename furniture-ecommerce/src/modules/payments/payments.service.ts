@@ -15,7 +15,7 @@ import type { AuthenticatedUser } from '@/modules/auth/interfaces';
 import type { OrderWithItems } from '@/modules/orders/interfaces';
 import { OrdersRepository } from '@/modules/orders/orders.repository';
 
-import { PaymentEntity, type Payment } from './entities/payment.entity';
+import { type Payment } from './entities/payment.entity';
 import { PaymentProviderService } from './payment-provider.service';
 import { PaymentsRepository } from './payments.repository';
 
@@ -71,8 +71,8 @@ export class PaymentsService {
 
     const config = this.configService.getOrThrow<AppConfig>('app');
     const urls = {
-      successUrl: `${config.frontendUrl}/payments/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${config.frontendUrl}/payments/cancel?session_id={CHECKOUT_SESSION_ID}`,
+      successUrl: `${config.frontendUrl}/payments/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
+      cancelUrl: `${config.frontendUrl}/payments/cancel?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
     };
 
     const session = await this.paymentProvider.createCheckoutSession(order, urls);
@@ -89,54 +89,13 @@ export class PaymentsService {
   }
 
   /**
-   * re-loads payment + order inside the transaction.
-   * status check and rollback happen atomically.
+   * allows reading payment status for pending/paid/failed/cancelled orders.
+   * checkoutUrl is returned for pending orders to allow the client to redirect to the checkout page.
    */
-  async handleCancel(sessionId: string): Promise<void> {
-    const payment = await this.paymentsRepository.findBySessionId(sessionId);
-    if (!payment) {
-      this.logger.warn({ sessionId }, 'Payment not found for cancel session');
-      return;
-    }
-
-    if (this.isFinalStatus(payment.status)) {
-      this.logger.info(
-        { sessionId, status: payment.status },
-        'Payment already in final status — skipping cancel',
-      );
-      return;
-    }
-
-    await this.em.transactional(async (txEm) => {
-      // re-load inside transaction — avoids stale entity and the as unknown as cast
-      const freshPayment = await txEm.findOneOrFail(
-        PaymentEntity,
-        { checkoutSessionId: sessionId },
-        { populate: ['order'] },
-      );
-
-      // double-check status inside transaction to prevent race
-      if (this.isFinalStatus(freshPayment.status)) {
-        return;
-      }
-
-      const order = await this.ordersRepository.findOne(freshPayment.order.id);
-      if (!order) return;
-
-      await this.rollbackStockAtomic(txEm, order);
-
-      txEm.assign(freshPayment, { status: PaymentStatus.Cancelled });
-      txEm.assign(freshPayment.order, { status: OrderStatus.Cancelled });
-      await txEm.flush();
-    });
-
-    this.logger.info({ sessionId }, 'Payment cancelled and stock rolled back');
-  }
-
-  /**
-   * allows reading payment status for paid/failed/cancelled orders.
-   */
-  async getPaymentStatus(authUser: AuthenticatedUser, orderId: string): Promise<Payment> {
+  async getPaymentStatus(
+    authUser: AuthenticatedUser,
+    orderId: string,
+  ): Promise<{ payment: Payment; checkoutUrl: string }> {
     const order = await this.findOwnedOrder(authUser.userId, orderId);
     const payment = await this.paymentsRepository.findByOrder(order.entity);
 
@@ -144,7 +103,9 @@ export class PaymentsService {
       throw new NotFoundException(`No payment found for order ${orderId}`);
     }
 
-    return payment;
+    const session = await this.paymentProvider.retrieveSession(payment.checkoutSessionId);
+
+    return { payment, checkoutUrl: session.checkoutUrl };
   }
 
   /**

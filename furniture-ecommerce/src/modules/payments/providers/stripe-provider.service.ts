@@ -18,9 +18,6 @@ export class StripeProviderService extends PaymentProviderService {
   readonly providerName = 'stripe';
   readonly defaultCurrency = 'usd';
 
-  // session expires in 30 minutes
-  readonly expirationTime = Math.floor(Date.now() / 1000) + 30 * 60;
-
   private readonly stripe: Stripe;
   private readonly webhookSecret: string;
 
@@ -65,7 +62,7 @@ export class StripeProviderService extends PaymentProviderService {
         success_url: urls.successUrl,
         cancel_url: urls.cancelUrl,
         metadata: { orderId: order.id },
-        expires_at: this.expirationTime,
+        expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // session expires in 30 minutes
       },
       { idempotencyKey: `checkout_session:${order.id}` },
     );
