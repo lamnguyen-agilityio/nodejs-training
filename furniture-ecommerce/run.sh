@@ -131,8 +131,10 @@ migration() {
   local sub_cmd="$1"
   shift
   info "Running migration:${sub_cmd} inside api container..."
-  if [[ $# -gt 0 ]]; then
-    dc exec api pnpm "migration:${sub_cmd}" -- "$@"
+  if [[ "$ENV" == "staging" ]]; then
+    dc exec api \
+      ./node_modules/.bin/mikro-orm migration:"${sub_cmd}" \
+      --config ./dist/config/database.config.js
   else
     dc exec api pnpm "migration:${sub_cmd}"
   fi

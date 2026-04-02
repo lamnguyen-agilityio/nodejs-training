@@ -32,7 +32,8 @@
     "tsConfigPath": "./tsconfig.json",
     "loader": "tsx",
     "configPaths": [
-      "./src/config/database.config.ts"
+      "./src/config/database.config.ts",
+      "./dist/config/database.config.js"
     ]
   },
   "dependencies": {
