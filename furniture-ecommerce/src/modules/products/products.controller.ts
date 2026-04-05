@@ -8,11 +8,11 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
-  Put,
   Query,
   UploadedFile,
   UseInterceptors,
   NotFoundException,
+  Patch,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -107,7 +107,7 @@ export class ProductsController {
     return ProductResponseDto.from(product);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @AuthRoles(Role.Admin)
   @UseInterceptors(FileInterceptor('image'))
   @ApiConsumes('multipart/form-data')

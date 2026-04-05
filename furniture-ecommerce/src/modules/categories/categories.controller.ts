@@ -7,8 +7,8 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
-  Put,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -66,7 +66,7 @@ export class CategoriesController {
     return CategoryResponseDto.from(category);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @AuthRoles(Role.Admin)
   @ApiOperation({ summary: 'Update category (Admin)' })
   @ApiBody({ type: UpdateCategoryDto })
