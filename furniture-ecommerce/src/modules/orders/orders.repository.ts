@@ -185,6 +185,7 @@ export class OrdersRepository {
 
     return orders.map((order) => ({
       entity: order,
+      userEmail: order.user.email,
       orderItems: itemsByOrderId.get(order.id) ?? [],
       id: order.id,
       status: order.status,
