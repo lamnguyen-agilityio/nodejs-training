@@ -14,6 +14,10 @@ export class OrderItemResponseDto {
   @Expose()
   productName: string;
 
+  @ApiProperty({ example: 'https://i.ibb.co/abc123/sofa.jpg' })
+  @Expose()
+  productImage: string;
+
   @ApiProperty({ example: '1299.99' })
   @Expose()
   priceAtPurchase: string;
@@ -32,6 +36,7 @@ export class OrderItemResponseDto {
       {
         id: item.id,
         productName: item.product.name,
+        productImage: item.product.image,
         priceAtPurchase: item.priceAtPurchase,
         quantity: item.quantity,
         subtotal: (Number(item.priceAtPurchase) * item.quantity).toFixed(NUMERIC.DECIMAL_PLACES),
