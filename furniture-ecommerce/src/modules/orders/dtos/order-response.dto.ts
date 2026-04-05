@@ -11,6 +11,10 @@ export class OrderResponseDto {
   @Expose()
   id: string;
 
+  @ApiProperty({ example: 'user@example.com' })
+  @Expose()
+  userEmail: string;
+
   @ApiProperty({ enum: OrderStatus, example: OrderStatus.Pending })
   @Expose()
   status: OrderStatus;
@@ -39,6 +43,7 @@ export class OrderResponseDto {
       OrderResponseDto,
       {
         id: order.id,
+        userEmail: order.userEmail,
         status: order.status,
         totalAmount: order.totalAmount,
         items,

@@ -10,6 +10,7 @@ import { type Order } from '../entities/order.entity';
  */
 export interface OrderWithItems {
   id: string;
+  userEmail: string;
   entity: Order;
   orderItems: OrderItem[];
   status: OrderStatus;
