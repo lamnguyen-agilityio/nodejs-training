@@ -3,12 +3,16 @@ import { Expose, plainToInstance } from 'class-transformer';
 
 import { NUMERIC } from '@/common/constants';
 
-import type { OrderItem } from '../entities/order-item.entity';
+import { OrderWithItemsAndUser } from '../interfaces';
 
 export class OrderItemResponseDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614173456' })
   @Expose()
   id: string;
+
+  @ApiProperty({ example: 'user@example.com' })
+  @Expose()
+  userEmail: string;
 
   @ApiProperty({ example: 'Modern Sofa' })
   @Expose()
@@ -30,11 +34,12 @@ export class OrderItemResponseDto {
   @Expose()
   subtotal: string;
 
-  static from(item: OrderItem): OrderItemResponseDto {
+  static from(item: OrderWithItemsAndUser): OrderItemResponseDto {
     return plainToInstance(
       OrderItemResponseDto,
       {
         id: item.id,
+        userEmail: item.userEmail,
         productName: item.product.name,
         productImage: item.product.image,
         priceAtPurchase: item.priceAtPurchase,

@@ -15,6 +15,7 @@ import type {
   PaginatedOrders,
   OrderWithItems,
   OrderItemData,
+  OrderWithItemsAndUser,
 } from './interfaces';
 
 @Injectable()
@@ -178,14 +179,15 @@ export class OrdersRepository {
     const itemsByOrderId = new Map<string, OrderItem[]>();
     for (const item of allItems) {
       const orderId = item.order.id;
+      const orderItem = { ...item, userEmail: item.order.user.email };
 
       if (!itemsByOrderId.has(orderId)) itemsByOrderId.set(orderId, []);
-      itemsByOrderId.get(orderId)!.push(item);
+      itemsByOrderId.get(orderId)!.push(orderItem);
     }
 
     return orders.map((order) => ({
       entity: order,
-      orderItems: itemsByOrderId.get(order.id) ?? [],
+      orderItems: (itemsByOrderId.get(order.id) as OrderWithItemsAndUser[]) ?? [],
       id: order.id,
       status: order.status,
       totalAmount: order.totalAmount,

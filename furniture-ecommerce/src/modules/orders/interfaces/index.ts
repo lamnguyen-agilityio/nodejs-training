@@ -4,6 +4,10 @@ import type { Product } from '@/modules/products/entities/product.entity';
 import { type OrderItem } from '../entities/order-item.entity';
 import { type Order } from '../entities/order.entity';
 
+export interface OrderWithItemsAndUser extends OrderItem {
+  userEmail: string;
+}
+
 /**
  * OrderWithItems wraps the tracked MikroORM entity + loaded items separately.
  * keeping a reference to the original entity ensures em.assign() works correctly.
@@ -11,7 +15,7 @@ import { type Order } from '../entities/order.entity';
 export interface OrderWithItems {
   id: string;
   entity: Order;
-  orderItems: OrderItem[];
+  orderItems: OrderWithItemsAndUser[];
   status: OrderStatus;
   totalAmount: string;
   createdAt: Date;
