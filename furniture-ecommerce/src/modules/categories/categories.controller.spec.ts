@@ -13,12 +13,23 @@ const makeCategory = (overrides: Partial<Category> = {}): Category =>
     id: faker.string.uuid(),
     name: faker.commerce.department(),
     slug: faker.helpers.slugify(faker.commerce.department()).toLowerCase(),
+    image: faker.internet.url(),
     description: faker.lorem.sentence(),
     createdAt: faker.date.past(),
     updatedAt: faker.date.recent(),
     deletedAt: null,
     ...overrides,
   }) as Category;
+
+const makeFile = (): Express.Multer.File =>
+  ({
+    fieldname: 'image',
+    originalname: 'product.jpg',
+    encoding: '7bit',
+    mimetype: 'image/jpeg',
+    size: 1024,
+    buffer: Buffer.from(''),
+  }) as Express.Multer.File;
 
 // ─── mocks ───────────────────────────────────────────────────────────────────
 
@@ -88,12 +99,13 @@ describe('CategoriesController', () => {
   describe('create', () => {
     it('should return CategoryResponseDto after creation', async () => {
       const dto = { name: faker.commerce.department() };
+      const file = makeFile();
       const category = makeCategory({ name: dto.name });
       mockCategoriesService.create.mockResolvedValue(category);
 
-      const result = await controller.create(dto);
+      const result = await controller.create(dto, file);
 
-      expect(mockCategoriesService.create).toHaveBeenCalledWith(dto);
+      expect(mockCategoriesService.create).toHaveBeenCalledWith(dto, file);
       expect(result).toBeInstanceOf(CategoryResponseDto);
     });
 
@@ -102,7 +114,9 @@ describe('CategoriesController', () => {
         new ConflictException('Category name already exists'),
       );
 
-      await expect(controller.create({ name: 'Duplicate' })).rejects.toThrow(ConflictException);
+      await expect(controller.create({ name: 'Duplicate' }, makeFile())).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -115,9 +129,13 @@ describe('CategoriesController', () => {
       const updated = { ...category, ...dto } as Category;
       mockCategoriesService.update.mockResolvedValue(updated);
 
-      const result = await controller.update(category.id, dto);
+      const result = await controller.update(category.id, dto, undefined);
 
-      expect(mockCategoriesService.update).toHaveBeenCalledWith(category.id, dto);
+      expect(mockCategoriesService.update).toHaveBeenCalledWith(
+        category.id,
+        expect.objectContaining({ name: dto.name }),
+        undefined,
+      );
       expect(result).toBeInstanceOf(CategoryResponseDto);
     });
 
