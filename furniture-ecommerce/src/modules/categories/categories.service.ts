@@ -5,7 +5,7 @@ import { toSlug } from '@/common/utils';
 import { ImageUploadService } from '@/modules/upload/image-upload.service';
 
 import { CategoriesRepository } from './categories.repository';
-import type { CreateCategoryDto } from './dtos';
+import type { CreateCategoryDto, UpdateCategoryDto } from './dtos';
 import type { Category } from './entities/category.entity';
 import type { UpdateCategory } from './interfaces';
 
@@ -52,17 +52,25 @@ export class CategoriesService {
   /**
    * updates an existing category with the given data.
    */
-  async update(id: string, dto: UpdateCategory): Promise<Category> {
+  async update(id: string, dto: UpdateCategoryDto, file?: Express.Multer.File): Promise<Category> {
     const category = await this.findOne({ id });
+    const changes: UpdateCategory & { slug?: string } = {};
 
-    const slug = dto.name ? toSlug(dto.name) : undefined;
+    if (dto.name) {
+      changes.slug = toSlug(dto.name);
+      changes.name = dto.name;
+    }
 
-    if (slug) {
-      const exists = await this.categoriesRepository.existsBySlug(slug, id);
+    // check if the slug already exists (excluding the current category)
+    if (changes.slug) {
+      const exists = await this.categoriesRepository.existsBySlug(changes.slug, id);
       if (exists) throw new ConflictException(MESSAGES.CATEGORY_SLUG_CONFLICT);
     }
 
-    return this.categoriesRepository.update(category, { ...dto, ...(slug && { slug }) });
+    if (file) changes.image = await this.imageUploadService.upload(file.buffer, file.originalname);
+    if (dto.description) changes.description = dto.description;
+
+    return this.categoriesRepository.update(category, changes);
   }
 
   /**
