@@ -59,6 +59,7 @@ const makeOrderItem = (price = '99.99', quantity = 2) => ({
 const makeOrder = (): OrderWithItems => ({
   entity: {} as Order,
   id: faker.string.uuid(),
+  userEmail: faker.internet.email(),
   status: OrderStatus.Pending,
   totalAmount: '199.98',
   createdAt: faker.date.past(),
