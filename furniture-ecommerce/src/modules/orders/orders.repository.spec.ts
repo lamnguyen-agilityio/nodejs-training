@@ -50,6 +50,7 @@ const makeOrderWithItems = (user: User): OrderWithItems => {
   const order = makeOrder(user);
   return {
     entity: order,
+    userEmail: faker.internet.email(),
     orderItems: [makeOrderItem(order.id)],
     id: order.id,
     status: order.status,
