@@ -6,6 +6,7 @@ import { OrderStatus, PaymentStatus } from '@/common/enums';
 import { OrdersRepository } from '@/modules/orders/orders.repository';
 import { PaymentEntity } from '@/modules/payments/entities/payment.entity';
 import type { WebhookEvent } from '@/modules/payments/interfaces';
+import { PaymentsRepository } from '@/modules/payments/payments.repository';
 import { PaymentsService } from '@/modules/payments/payments.service';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class CheckoutExpiredHandler {
     private readonly logger: PinoLogger,
     private readonly paymentsService: PaymentsService,
     private readonly ordersRepository: OrdersRepository,
+    private readonly paymentsRepository: PaymentsRepository,
   ) {
     this.logger.setContext(CheckoutExpiredHandler.name);
   }
@@ -59,7 +61,7 @@ export class CheckoutExpiredHandler {
         return;
       }
 
-      await this.paymentsService.rollbackStockAtomic(txEm, order);
+      await this.paymentsRepository.rollbackStockAtomic(txEm, order);
 
       txEm.assign(payment, {
         status: paymentStatus,

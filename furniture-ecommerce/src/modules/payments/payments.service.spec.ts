@@ -3,9 +3,9 @@ import { BadRequestException, ConflictException, NotFoundException } from '@nest
 import { ConfigService } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
 
-import { OrderStatus, PaymentStatus } from '@/common/enums';
-import { Role } from '@/common/enums';
+import { OrderStatus, PaymentStatus, Role } from '@/common/enums';
 import type { AuthenticatedUser } from '@/modules/auth/interfaces';
+import { OrderItem } from '@/modules/orders/entities/order-item.entity';
 import type { Order } from '@/modules/orders/entities/order.entity';
 import type { OrderWithItems } from '@/modules/orders/interfaces';
 import { OrdersRepository } from '@/modules/orders/orders.repository';
@@ -16,7 +16,6 @@ import type { Payment } from './entities/payment.entity';
 import { PaymentProviderService } from './payment-provider.service';
 import { PaymentsRepository } from './payments.repository';
 import { PaymentsService } from './payments.service';
-import { OrderItem } from '../orders/entities/order-item.entity';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -30,6 +29,7 @@ const makeAuthUser = (userId = faker.string.uuid()): AuthenticatedUser => ({
 const makeOrder = (userId: string, status = OrderStatus.Pending): OrderWithItems => ({
   entity: {} as Order,
   id: faker.string.uuid(),
+  userEmail: faker.internet.email(),
   status,
   totalAmount: '199.98',
   createdAt: faker.date.past(),
@@ -78,6 +78,7 @@ const mockPaymentsRepository = {
   createOrClaimPending: jest.fn(),
   attachSession: jest.fn(),
   updateStatus: jest.fn(),
+  deductStockAtomic: jest.fn(),
 } satisfies Partial<jest.Mocked<PaymentsRepository>>;
 
 const mockOrdersRepository = {
@@ -107,6 +108,9 @@ describe('PaymentsService', () => {
       mockOrdersRepository as unknown as OrdersRepository,
       mockPaymentProvider as unknown as PaymentProviderService,
     );
+
+    // default: stock deduction succeeds
+    mockPaymentsRepository.deductStockAtomic.mockResolvedValue({ ok: true });
   });
 
   // ── createCheckout ─────────────────────────────────────────────────────────
@@ -119,10 +123,7 @@ describe('PaymentsService', () => {
       const checkoutUrl = makeCheckoutUrl();
 
       mockOrdersRepository.findOne.mockResolvedValue(order);
-      mockPaymentsRepository.createOrClaimPending.mockResolvedValue({
-        payment,
-        isNew: true,
-      });
+      mockPaymentsRepository.createOrClaimPending.mockResolvedValue({ payment, isNew: true });
       mockPaymentProvider.createCheckoutSession.mockResolvedValue({
         sessionId: payment.checkoutSessionId,
         intentId: null,
@@ -139,6 +140,27 @@ describe('PaymentsService', () => {
       expect(mockPaymentsRepository.attachSession).toHaveBeenCalled();
     });
 
+    it('should call deductStockAtomic before creating stripe session', async () => {
+      const authUser = makeAuthUser();
+      const order = makeOrder(authUser.userId);
+      const payment = makePayment();
+
+      mockOrdersRepository.findOne.mockResolvedValue(order);
+      mockPaymentsRepository.createOrClaimPending.mockResolvedValue({ payment, isNew: true });
+      mockPaymentProvider.createCheckoutSession.mockResolvedValue({
+        sessionId: payment.checkoutSessionId,
+        intentId: null,
+        checkoutUrl: makeCheckoutUrl(),
+        amount: 0,
+        currency: 'usd',
+      });
+      mockPaymentsRepository.attachSession.mockResolvedValue(payment);
+
+      await service.createCheckout(authUser, order.id);
+
+      expect(mockPaymentsRepository.deductStockAtomic).toHaveBeenCalledWith(order);
+    });
+
     it('should reuse existing session when payment already pending', async () => {
       const authUser = makeAuthUser();
       const order = makeOrder(authUser.userId);
@@ -147,10 +169,7 @@ describe('PaymentsService', () => {
       const checkoutUrl = makeCheckoutUrl();
 
       mockOrdersRepository.findOne.mockResolvedValue(order);
-      mockPaymentsRepository.createOrClaimPending.mockResolvedValue({
-        payment,
-        isNew: false,
-      });
+      mockPaymentsRepository.createOrClaimPending.mockResolvedValue({ payment, isNew: false });
       mockPaymentProvider.retrieveSession.mockResolvedValue({
         sessionId,
         intentId: null,
@@ -172,10 +191,7 @@ describe('PaymentsService', () => {
       const payment = makePayment(PaymentStatus.Succeeded, '');
 
       mockOrdersRepository.findOne.mockResolvedValue(order);
-      mockPaymentsRepository.createOrClaimPending.mockResolvedValue({
-        payment,
-        isNew: false,
-      });
+      mockPaymentsRepository.createOrClaimPending.mockResolvedValue({ payment, isNew: false });
 
       await expect(service.createCheckout(authUser, order.id)).rejects.toThrow(ConflictException);
     });
@@ -190,7 +206,7 @@ describe('PaymentsService', () => {
 
     it('should throw BadRequestException when order belongs to another user', async () => {
       const authUser = makeAuthUser();
-      const order = makeOrder(faker.string.uuid()); // different user
+      const order = makeOrder(faker.string.uuid());
 
       mockOrdersRepository.findOne.mockResolvedValue(order);
 
@@ -206,27 +222,13 @@ describe('PaymentsService', () => {
       await expect(service.createCheckout(authUser, order.id)).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw BadRequestException when stock is insufficient', async () => {
-      const authUser = makeAuthUser();
-      const order = makeOrder(authUser.userId);
-      order.orderItems[0].product.quantityInStock = 1;
-      order.orderItems[0].quantity = 5;
-
-      mockOrdersRepository.findOne.mockResolvedValue(order);
-
-      await expect(service.createCheckout(authUser, order.id)).rejects.toThrow(BadRequestException);
-    });
-
     it('should pass success and cancel urls with order_id appended', async () => {
       const authUser = makeAuthUser();
       const order = makeOrder(authUser.userId);
       const payment = makePayment();
 
       mockOrdersRepository.findOne.mockResolvedValue(order);
-      mockPaymentsRepository.createOrClaimPending.mockResolvedValue({
-        payment,
-        isNew: true,
-      });
+      mockPaymentsRepository.createOrClaimPending.mockResolvedValue({ payment, isNew: true });
       mockPaymentProvider.createCheckoutSession.mockResolvedValue({
         sessionId: `cs_test_${faker.string.alphanumeric(24)}`,
         intentId: null,
@@ -303,56 +305,6 @@ describe('PaymentsService', () => {
 
     it('should return false for pending', () => {
       expect(service.isFinalStatus(PaymentStatus.Pending)).toBe(false);
-    });
-  });
-
-  // ── rollbackStockAtomic ────────────────────────────────────────────────────
-
-  describe('rollbackStockAtomic', () => {
-    it('should execute atomic increment for each order item', async () => {
-      const txEm = {
-        getConnection: jest.fn().mockReturnValue({
-          execute: jest.fn().mockResolvedValue(undefined),
-        }),
-      };
-      const order = makeOrder(faker.string.uuid());
-
-      await service.rollbackStockAtomic(
-        txEm as unknown as import('@mikro-orm/postgresql').EntityManager,
-        order,
-      );
-
-      const conn = txEm.getConnection();
-      expect(conn.execute).toHaveBeenCalledWith(
-        'UPDATE products SET quantity_in_stock = quantity_in_stock + ? WHERE id = ?',
-        [order.orderItems[0].quantity, order.orderItems[0].product.id],
-      );
-    });
-
-    it('should execute one update per order item', async () => {
-      const order = makeOrder(faker.string.uuid());
-      order.orderItems.push({
-        id: faker.string.uuid(),
-        quantity: 1,
-        priceAtPurchase: '49.99',
-        product: {
-          id: faker.string.uuid(),
-          name: 'Product 2',
-          quantityInStock: 5,
-        } as OrderWithItems['orderItems'][number]['product'],
-      } as OrderItem);
-
-      const mockExecute = jest.fn().mockResolvedValue(undefined);
-      const txEm = {
-        getConnection: jest.fn().mockReturnValue({ execute: mockExecute }),
-      };
-
-      await service.rollbackStockAtomic(
-        txEm as unknown as import('@mikro-orm/postgresql').EntityManager,
-        order,
-      );
-
-      expect(mockExecute).toHaveBeenCalledTimes(2);
     });
   });
 });
