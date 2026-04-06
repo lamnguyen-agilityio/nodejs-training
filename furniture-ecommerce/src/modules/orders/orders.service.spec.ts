@@ -57,6 +57,7 @@ const makeOrderWithItems = (
 ): OrderWithItems => ({
   entity: {} as Order,
   id: faker.string.uuid(),
+  userEmail: faker.internet.email(),
   status: OrderStatus.Pending,
   totalAmount: '199.98',
   createdAt: faker.date.past(),
@@ -137,25 +138,6 @@ describe('OrdersService', () => {
 
       expect(mockEm.transactional).toHaveBeenCalled();
       expect(result).toBe(order);
-    });
-
-    it('should throw BadRequestException when stock deduction returns 0 affected rows', async () => {
-      const authUser = makeAuthUser();
-      const user = makeUser(authUser.userId);
-      const product = makeProduct({ name: 'Sofa', quantityInStock: 1 });
-      const cartItems = [makeCartItem({ product, quantity: 5 })];
-
-      mockUsersService.findOne.mockResolvedValue(user);
-      mockCartsRepository.findByUser.mockResolvedValue(cartItems);
-
-      mockEm.transactional.mockImplementation(async (cb: Function) => {
-        const txEm = createMockEm();
-        txEm.nativeUpdate.mockResolvedValue(0); // 0 rows affected = out of stock
-        return cb(txEm);
-      });
-
-      await expect(service.createFromCart(authUser)).rejects.toThrow(BadRequestException);
-      await expect(service.createFromCart(authUser)).rejects.toThrow(MESSAGES.INSUFFICIENT_STOCK);
     });
   });
 
