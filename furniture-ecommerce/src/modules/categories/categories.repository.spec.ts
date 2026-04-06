@@ -15,6 +15,7 @@ const makeCategory = (overrides: Partial<Category> = {}): Category =>
     name: faker.commerce.department(),
     slug: faker.helpers.slugify(faker.commerce.department()).toLowerCase(),
     description: faker.lorem.sentence(),
+    image: faker.internet.url(),
     createdAt: faker.date.past(),
     updatedAt: faker.date.recent(),
     deletedAt: null,
@@ -25,6 +26,7 @@ const makeCreateData = () => ({
   name: faker.commerce.department(),
   slug: faker.helpers.slugify(faker.commerce.department()).toLowerCase(),
   description: faker.lorem.sentence(),
+  image: faker.internet.url(),
 });
 
 // ─── mocks ───────────────────────────────────────────────────────────────────

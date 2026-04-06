@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 import { MESSAGES } from '@/common/constants';
+import { ImageUploadService } from '@/modules/upload/image-upload.service';
 
 import { CategoriesRepository } from './categories.repository';
 import { CategoriesService } from './categories.service';
@@ -15,11 +16,22 @@ const makeCategory = (overrides: Partial<Category> = {}): Category =>
     name: faker.commerce.department(),
     slug: faker.helpers.slugify(faker.commerce.department()).toLowerCase(),
     description: faker.lorem.sentence(),
+    image: faker.internet.url(),
     createdAt: faker.date.past(),
     updatedAt: faker.date.recent(),
     deletedAt: null,
     ...overrides,
   }) as Category;
+
+const makeFile = (): Express.Multer.File =>
+  ({
+    fieldname: 'image',
+    originalname: 'product.jpg',
+    encoding: '7bit',
+    mimetype: 'image/jpeg',
+    size: 1024,
+    buffer: Buffer.from(''),
+  }) as Express.Multer.File;
 
 // ─── mocks ───────────────────────────────────────────────────────────────────
 
@@ -32,6 +44,10 @@ const mockCategoriesRepository = {
   softDelete: jest.fn(),
 } satisfies Partial<jest.Mocked<CategoriesRepository>>;
 
+const mockImageUploadService = {
+  upload: jest.fn(),
+} satisfies Partial<jest.Mocked<ImageUploadService>>;
+
 // ─── suite ───────────────────────────────────────────────────────────────────
 
 describe('CategoriesService', () => {
@@ -39,7 +55,10 @@ describe('CategoriesService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new CategoriesService(mockCategoriesRepository as unknown as CategoriesRepository);
+    service = new CategoriesService(
+      mockCategoriesRepository as unknown as CategoriesRepository,
+      mockImageUploadService as unknown as ImageUploadService,
+    );
   });
 
   // ── findAll ────────────────────────────────────────────────────────────────
@@ -103,8 +122,9 @@ describe('CategoriesService', () => {
 
       mockCategoriesRepository.existsBySlug.mockResolvedValue(false);
       mockCategoriesRepository.create.mockResolvedValue(category);
+      mockImageUploadService.upload.mockResolvedValue(makeFile());
 
-      const result = await service.create(dto);
+      const result = await service.create(dto, makeFile());
 
       expect(mockCategoriesRepository.existsBySlug).toHaveBeenCalledWith('living-room');
       expect(mockCategoriesRepository.create).toHaveBeenCalledWith(
@@ -118,7 +138,7 @@ describe('CategoriesService', () => {
       mockCategoriesRepository.existsBySlug.mockResolvedValue(false);
       mockCategoriesRepository.create.mockResolvedValue(makeCategory());
 
-      await service.create(dto);
+      await service.create(dto, makeFile());
 
       expect(mockCategoriesRepository.existsBySlug).toHaveBeenCalledWith('dining-room-kitchen');
     });
@@ -127,8 +147,10 @@ describe('CategoriesService', () => {
       const dto = { name: 'Living Room' };
       mockCategoriesRepository.existsBySlug.mockResolvedValue(true);
 
-      await expect(service.create(dto)).rejects.toThrow(ConflictException);
-      await expect(service.create(dto)).rejects.toThrow(MESSAGES.CATEGORY_SLUG_CONFLICT);
+      await expect(service.create(dto, makeFile())).rejects.toThrow(ConflictException);
+      await expect(service.create(dto, makeFile())).rejects.toThrow(
+        MESSAGES.CATEGORY_SLUG_CONFLICT,
+      );
       expect(mockCategoriesRepository.create).not.toHaveBeenCalled();
     });
   });
@@ -138,14 +160,17 @@ describe('CategoriesService', () => {
   describe('update', () => {
     it('should update and return category', async () => {
       const category = makeCategory();
-      const dto = { name: 'Updated Name', description: 'New description' };
+      const dto = {
+        name: 'Updated Name',
+        description: 'New description',
+      };
       const updated = { ...category, ...dto, slug: 'updated-name' } as Category;
 
       mockCategoriesRepository.findOne.mockResolvedValue(category);
       mockCategoriesRepository.existsBySlug.mockResolvedValue(false);
       mockCategoriesRepository.update.mockResolvedValue(updated);
 
-      const result = await service.update(category.id, dto);
+      const result = await service.update(category.id, dto, makeFile());
 
       expect(mockCategoriesRepository.existsBySlug).toHaveBeenCalledWith(
         'updated-name',
