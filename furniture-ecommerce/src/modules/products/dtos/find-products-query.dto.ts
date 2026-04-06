@@ -1,8 +1,18 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsInt, IsNumber, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  IsEnum,
+} from 'class-validator';
 
 import { LENGTH, NUMERIC } from '@/common/constants';
+import { ProductSortField, SortOrder } from '@/common/enums';
 
 export class FindProductsQueryDto {
   @ApiPropertyOptional({ example: 'sofa' })
@@ -30,6 +40,26 @@ export class FindProductsQueryDto {
   @IsNumber()
   @Min(NUMERIC.PRICE_MIN)
   maxPrice?: number;
+
+  @ApiPropertyOptional({
+    example: ProductSortField.CreatedAt,
+    enum: ProductSortField,
+    default: ProductSortField.CreatedAt,
+    description: 'Field to sort by: name | price | createdAt',
+  })
+  @IsOptional()
+  @IsEnum(ProductSortField)
+  sortBy?: ProductSortField;
+
+  @ApiPropertyOptional({
+    example: SortOrder.Desc,
+    enum: SortOrder,
+    default: SortOrder.Desc,
+    description: 'Sort direction: asc | desc',
+  })
+  @IsOptional()
+  @IsEnum(SortOrder)
+  sortOrder?: SortOrder;
 
   @ApiPropertyOptional({ example: 1, default: NUMERIC.PAGE_MIN })
   @IsOptional()
