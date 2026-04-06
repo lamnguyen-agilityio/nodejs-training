@@ -16,6 +16,9 @@ export const CategoryEntity = defineEntity({
     // category description.
     description: p.string().nullable(),
 
+    // image URL for the category.
+    image: p.string(),
+
     // creation timestamp.
     createdAt: p
       .datetime()
