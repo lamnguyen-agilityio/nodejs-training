@@ -36,6 +36,7 @@ import {
   CreateCategoryDto,
   UpdateCategoryDto,
   CreateCategoryFormDto,
+  UpdateCategoryFormDto,
 } from './dtos';
 
 @ApiTags('categories')
@@ -83,8 +84,10 @@ export class CategoriesController {
 
   @Patch(':id')
   @AuthRoles(Role.Admin)
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Update category (Admin)' })
-  @ApiBody({ type: UpdateCategoryDto })
+  @ApiBody({ type: UpdateCategoryFormDto })
   @ApiOkResponse({ type: CategoryResponseDto })
   @ApiForbiddenResponse({ description: 'You are not authorized to update this category' })
   @ApiNotFoundResponse({ description: 'Category not found' })
@@ -92,8 +95,9 @@ export class CategoriesController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCategoryDto,
+    @UploadedFile(new ParseImageFilePipe(false)) file?: Express.Multer.File,
   ): Promise<CategoryResponseDto> {
-    const category = await this.categoriesService.update(id, dto);
+    const category = await this.categoriesService.update(id, dto, file);
     return CategoryResponseDto.from(category);
   }
 

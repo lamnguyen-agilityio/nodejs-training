@@ -80,13 +80,13 @@ export class ProductsService {
 
     const changes: UpdateProductData = {};
 
-    if (dto.name !== undefined) changes.name = dto.name;
-    if (dto.description !== undefined) changes.description = dto.description;
-    if (dto.quantityInStock !== undefined) changes.quantityInStock = dto.quantityInStock;
-    if (dto.name !== undefined) changes.slug = toSlug(dto.name);
-    if (dto.price !== undefined) changes.price = String(dto.price);
-    if (dto.image !== undefined) changes.image = dto.image;
-    if (category !== undefined) changes.category = category;
+    if (dto.name) changes.name = dto.name;
+    if (dto.description) changes.description = dto.description;
+    if (dto.quantityInStock) changes.quantityInStock = dto.quantityInStock;
+    if (dto.name) changes.slug = toSlug(dto.name);
+    if (dto.price) changes.price = String(dto.price);
+    if (dto.image) changes.image = dto.image;
+    if (category) changes.category = category;
 
     return this.productsRepository.update(product, changes);
   }
