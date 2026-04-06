@@ -2,14 +2,19 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 
 import { MESSAGES } from '@/common/constants';
 import { toSlug } from '@/common/utils';
+import { ImageUploadService } from '@/modules/upload/image-upload.service';
 
 import { CategoriesRepository } from './categories.repository';
+import type { CreateCategoryDto } from './dtos';
 import type { Category } from './entities/category.entity';
-import type { CreateCategory, UpdateCategory } from './interfaces';
+import type { UpdateCategory } from './interfaces';
 
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly categoriesRepository: CategoriesRepository) {}
+  constructor(
+    private readonly categoriesRepository: CategoriesRepository,
+    private readonly imageUploadService: ImageUploadService,
+  ) {}
 
   /**
    * finds all categories that are not soft-deleted.
@@ -33,13 +38,15 @@ export class CategoriesService {
   /**
    * creates a new category with the given data.
    */
-  async create(dto: CreateCategory): Promise<Category> {
+  async create(dto: CreateCategoryDto, file: Express.Multer.File): Promise<Category> {
     const slug = toSlug(dto.name);
 
     const exists = await this.categoriesRepository.existsBySlug(slug);
     if (exists) throw new ConflictException(MESSAGES.CATEGORY_SLUG_CONFLICT);
 
-    return this.categoriesRepository.create({ ...dto, slug });
+    const image = await this.imageUploadService.upload(file.buffer, file.originalname);
+
+    return this.categoriesRepository.create({ ...dto, slug, image });
   }
 
   /**

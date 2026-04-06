@@ -9,7 +9,10 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -20,13 +23,20 @@ import {
   ApiOperation,
   ApiTags,
   ApiForbiddenResponse,
+  ApiConsumes,
 } from '@nestjs/swagger';
 
 import { Role } from '@/common/enums';
+import { ParseImageFilePipe } from '@/common/pipes/parse-image-file.pipe';
 import { AuthRoles } from '@/modules/auth/decorators';
 
 import { CategoriesService } from './categories.service';
-import { CategoryResponseDto, CreateCategoryDto, UpdateCategoryDto } from './dtos';
+import {
+  CategoryResponseDto,
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  CreateCategoryFormDto,
+} from './dtos';
 
 @ApiTags('categories')
 @Controller('categories')
@@ -56,13 +66,18 @@ export class CategoriesController {
 
   @Post()
   @AuthRoles(Role.Admin)
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create category (Admin)' })
-  @ApiBody({ type: CreateCategoryDto })
+  @ApiBody({ type: CreateCategoryFormDto })
   @ApiCreatedResponse({ type: CategoryResponseDto })
   @ApiForbiddenResponse({ description: 'You are not authorized to create this category' })
   @ApiConflictResponse({ description: 'Category name already exists' })
-  async create(@Body() dto: CreateCategoryDto): Promise<CategoryResponseDto> {
-    const category = await this.categoriesService.create(dto);
+  async create(
+    @Body() dto: CreateCategoryDto,
+    @UploadedFile(new ParseImageFilePipe(true)) image: Express.Multer.File,
+  ): Promise<CategoryResponseDto> {
+    const category = await this.categoriesService.create(dto, image);
     return CategoryResponseDto.from(category);
   }
 
