@@ -20,6 +20,10 @@ export class CategoryResponseDto {
   @Expose()
   description: string | null;
 
+  @ApiPropertyOptional({ example: 'https://i.ibb.co/abc123/sofa.jpg' })
+  @Expose()
+  image: string;
+
   @ApiProperty()
   @Expose()
   createdAt: Date;

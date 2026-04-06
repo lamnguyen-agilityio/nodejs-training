@@ -1,11 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength, MinLength, Allow } from 'class-validator';
 
 import { LENGTH } from '@/common/constants';
 
-import type { CreateCategory } from '../interfaces';
-
-export class CreateCategoryDto implements CreateCategory {
+export class CreateCategoryDto {
   @ApiProperty({ example: 'Living Room', description: 'Category name' })
   @IsString()
   @MinLength(LENGTH.SHORT_MIN)
@@ -17,4 +15,16 @@ export class CreateCategoryDto implements CreateCategory {
   @IsString()
   @MaxLength(LENGTH.DESCRIPTION)
   description?: string;
+
+  @Allow()
+  image?: unknown;
+}
+
+export class CreateCategoryFormDto extends CreateCategoryDto {
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: 'Category image file (JPEG, PNG, WEBP — max 5MB)',
+  })
+  declare image: Express.Multer.File;
 }
