@@ -8,6 +8,7 @@ import type { Order } from '@/modules/orders/entities/order.entity';
 import type { OrderWithItems } from '@/modules/orders/interfaces';
 import { OrdersRepository } from '@/modules/orders/orders.repository';
 import type { WebhookEvent } from '@/modules/payments/interfaces';
+import { PaymentsRepository } from '@/modules/payments/payments.repository';
 import { PaymentsService } from '@/modules/payments/payments.service';
 import type { User } from '@/modules/users/entities/user.entity';
 import { createMockEm, createMockLogger } from '@/test/mocks';
@@ -45,6 +46,7 @@ const makePayment = (status = PaymentStatus.Pending): FakePayment => ({
 const makeOrder = (): OrderWithItems => ({
   entity: {} as Order,
   id: faker.string.uuid(),
+  userEmail: faker.internet.email(),
   status: OrderStatus.Pending,
   totalAmount: '99.99',
   createdAt: faker.date.past(),
@@ -68,8 +70,11 @@ const makeOrder = (): OrderWithItems => ({
 
 const mockPaymentsService = {
   isFinalStatus: jest.fn(),
-  rollbackStockAtomic: jest.fn(),
 } satisfies Partial<jest.Mocked<PaymentsService>>;
+
+const mockPaymentsRepository = {
+  rollbackStockAtomic: jest.fn(),
+} satisfies Partial<jest.Mocked<PaymentsRepository>>;
 
 const mockOrdersRepository = {
   findOne: jest.fn(),
@@ -105,6 +110,7 @@ describe('CheckoutExpiredHandler', () => {
       mockLogger as unknown as PinoLogger,
       mockPaymentsService as unknown as PaymentsService,
       mockOrdersRepository as unknown as OrdersRepository,
+      mockPaymentsRepository as unknown as PaymentsRepository,
     );
   });
 
@@ -117,7 +123,7 @@ describe('CheckoutExpiredHandler', () => {
       const order = makeOrder();
 
       mockPaymentsService.isFinalStatus.mockReturnValue(false);
-      mockPaymentsService.rollbackStockAtomic.mockResolvedValue(undefined);
+      mockPaymentsRepository.rollbackStockAtomic.mockResolvedValue(undefined);
       mockOrdersRepository.findOne.mockResolvedValue(order);
 
       mockEm.transactional.mockImplementation(async (cb: (em: unknown) => Promise<unknown>) =>
@@ -126,7 +132,7 @@ describe('CheckoutExpiredHandler', () => {
 
       await handler.handleExpired(event);
 
-      expect(mockPaymentsService.rollbackStockAtomic).toHaveBeenCalled();
+      expect(mockPaymentsRepository.rollbackStockAtomic).toHaveBeenCalled();
       expect(payment.status).toBe(PaymentStatus.Cancelled);
       expect(payment.order.status).toBe(OrderStatus.Cancelled);
     });
@@ -138,7 +144,7 @@ describe('CheckoutExpiredHandler', () => {
       let capturedTxEm: TxEm | undefined;
 
       mockPaymentsService.isFinalStatus.mockReturnValue(false);
-      mockPaymentsService.rollbackStockAtomic.mockResolvedValue(undefined);
+      mockPaymentsRepository.rollbackStockAtomic.mockResolvedValue(undefined);
       mockOrdersRepository.findOne.mockResolvedValue(order);
 
       mockEm.transactional.mockImplementation(async (cb: (em: unknown) => Promise<unknown>) => {
@@ -149,7 +155,7 @@ describe('CheckoutExpiredHandler', () => {
 
       await handler.handleExpired(event);
 
-      expect(mockPaymentsService.rollbackStockAtomic).toHaveBeenCalledWith(capturedTxEm, order);
+      expect(mockPaymentsRepository.rollbackStockAtomic).toHaveBeenCalledWith(capturedTxEm, order);
     });
 
     it('should log info on successful expiry handling', async () => {
@@ -158,7 +164,7 @@ describe('CheckoutExpiredHandler', () => {
       const order = makeOrder();
 
       mockPaymentsService.isFinalStatus.mockReturnValue(false);
-      mockPaymentsService.rollbackStockAtomic.mockResolvedValue(undefined);
+      mockPaymentsRepository.rollbackStockAtomic.mockResolvedValue(undefined);
       mockOrdersRepository.findOne.mockResolvedValue(order);
       mockEm.transactional.mockImplementation(async (cb: (em: unknown) => Promise<unknown>) =>
         cb(makeTxEm(payment)),
@@ -187,7 +193,7 @@ describe('CheckoutExpiredHandler', () => {
 
       await handler.handleExpired(event);
 
-      expect(mockPaymentsService.rollbackStockAtomic).not.toHaveBeenCalled();
+      expect(mockPaymentsRepository.rollbackStockAtomic).not.toHaveBeenCalled();
       expect(mockOrdersRepository.findOne).not.toHaveBeenCalled();
     });
 
@@ -204,7 +210,7 @@ describe('CheckoutExpiredHandler', () => {
         expect.objectContaining({ sessionId: event.sessionId }),
         'Payment not found for rollback',
       );
-      expect(mockPaymentsService.rollbackStockAtomic).not.toHaveBeenCalled();
+      expect(mockPaymentsRepository.rollbackStockAtomic).not.toHaveBeenCalled();
     });
 
     it('should log warn and skip rollback when order not found', async () => {
@@ -223,7 +229,7 @@ describe('CheckoutExpiredHandler', () => {
         expect.objectContaining({ orderId: payment.order.id }),
         'Order not found for rollback',
       );
-      expect(mockPaymentsService.rollbackStockAtomic).not.toHaveBeenCalled();
+      expect(mockPaymentsRepository.rollbackStockAtomic).not.toHaveBeenCalled();
     });
   });
 });

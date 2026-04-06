@@ -1,4 +1,3 @@
-import { EntityManager } from '@mikro-orm/postgresql';
 import {
   BadRequestException,
   ConflictException,
@@ -8,13 +7,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
 
-import { MESSAGES, NUMERIC } from '@/common/constants';
+import { NUMERIC } from '@/common/constants';
 import { OrderStatus, PaymentStatus } from '@/common/enums';
 import type { AppConfig } from '@/config';
 import type { AuthenticatedUser } from '@/modules/auth/interfaces';
 import type { OrderWithItems } from '@/modules/orders/interfaces';
 import { OrdersRepository } from '@/modules/orders/orders.repository';
-import { ProductEntity } from '@/modules/products/entities/product.entity';
 
 import { type Payment } from './entities/payment.entity';
 import { PaymentProviderService } from './payment-provider.service';
@@ -23,7 +21,6 @@ import { PaymentsRepository } from './payments.repository';
 @Injectable()
 export class PaymentsService {
   constructor(
-    private readonly em: EntityManager,
     private readonly configService: ConfigService,
     private readonly logger: PinoLogger,
     private readonly paymentsRepository: PaymentsRepository,
@@ -50,7 +47,7 @@ export class PaymentsService {
     this.assertOrderIsPending(order);
 
     // atomic stock deduction — race condition safe
-    await this.deductStockAtomic(order);
+    await this.paymentsRepository.deductStockAtomic(order);
 
     // atomically claim or retrieve existing pending payment record
     const { payment, isNew } = await this.paymentsRepository.createOrClaimPending(
@@ -110,23 +107,6 @@ export class PaymentsService {
   }
 
   /**
-   * uses quantity_in_stock = quantity_in_stock + qty to avoid overwriting
-   * concurrent changes. accepts txEm to share the caller's transaction.
-   */
-  async rollbackStockAtomic(txEm: EntityManager, order: OrderWithItems): Promise<void> {
-    this.logger.info({ orderId: order.id }, 'Rolling back stock for order');
-
-    for (const item of order.orderItems) {
-      await txEm
-        .getConnection()
-        .execute(`UPDATE products SET quantity_in_stock = quantity_in_stock + ? WHERE id = ?`, [
-          item.quantity,
-          item.product.id,
-        ]);
-    }
-  }
-
-  /**
    * returns true if the payment status is final (succeeded, failed, or cancelled).
    */
   isFinalStatus(status: PaymentStatus): boolean {
@@ -160,34 +140,6 @@ export class PaymentsService {
       throw new BadRequestException(
         `Order status is '${order.status}' — only pending orders can be checked out`,
       );
-    }
-  }
-
-  /**
-   * atomic stock deduction at checkout time.
-   * uses conditional nativeUpdate (WHERE quantity_in_stock >= requested)
-   * to prevent overselling when two users checkout the same product.
-   * throws 409 ConflictException if any product is out of stock.
-   */
-  private async deductStockAtomic(order: OrderWithItems): Promise<void> {
-    for (const item of order.orderItems) {
-      const affected = await this.em.nativeUpdate(
-        ProductEntity,
-        {
-          id: item.product.id,
-          quantityInStock: { $gte: item.quantity },
-        },
-        { quantityInStock: item.product.quantityInStock - item.quantity },
-      );
-
-      if (affected === 0) {
-        this.logger.warn(
-          { productId: item.product.id, required: item.quantity },
-          'Stock insufficient at checkout',
-        );
-
-        throw new ConflictException(`${item.product.name}: ${MESSAGES.INSUFFICIENT_STOCK}`);
-      }
     }
   }
 }

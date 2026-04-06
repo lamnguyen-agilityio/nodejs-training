@@ -5,6 +5,8 @@ import { PinoLogger } from 'nestjs-pino';
 import { Retryable } from '@/common/database';
 import { PaymentStatus } from '@/common/enums';
 import type { Order } from '@/modules/orders/entities/order.entity';
+import type { OrderWithItems } from '@/modules/orders/interfaces';
+import { ProductEntity } from '@/modules/products/entities/product.entity';
 
 import { PaymentEntity, type Payment } from './entities/payment.entity';
 import type { AttachSessionData } from './interfaces';
@@ -100,5 +102,45 @@ export class PaymentsRepository {
     await this.em.flush();
 
     return payment;
+  }
+
+  /**
+   * atomic stock deduction at checkout time.
+   * uses conditional nativeUpdate (WHERE quantity_in_stock >= requested)
+   * to prevent overselling when two users checkout the same product.
+   * returns false if any product has insufficient stock.
+   */
+  async deductStockAtomic(order: OrderWithItems): Promise<{ ok: boolean; productName?: string }> {
+    for (const item of order.orderItems) {
+      const affected = await this.em.nativeUpdate(
+        ProductEntity,
+        {
+          id: item.product.id,
+          quantityInStock: { $gte: item.quantity },
+        },
+        { quantityInStock: item.product.quantityInStock - item.quantity },
+      );
+
+      if (affected === 0) {
+        return { ok: false, productName: item.product.name };
+      }
+    }
+    return { ok: true };
+  }
+
+  /**
+   * atomic DB-side stock increment — used by webhook handlers on rollback.
+   * quantity_in_stock = quantity_in_stock + qty avoids stale in-memory values.
+   * accepts txEm to share the caller's transaction.
+   */
+  async rollbackStockAtomic(txEm: EntityManager, order: OrderWithItems): Promise<void> {
+    for (const item of order.orderItems) {
+      await txEm
+        .getConnection()
+        .execute(`UPDATE products SET quantity_in_stock = quantity_in_stock + ? WHERE id = ?`, [
+          item.quantity,
+          item.product.id,
+        ]);
+    }
   }
 }
