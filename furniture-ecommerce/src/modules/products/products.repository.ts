@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
 import { Retryable } from '@/common/database';
+import { ProductSortField, SortOrder } from '@/common/enums';
 import { resolvePagination } from '@/common/utils';
 
 import { ProductEntity, type Product } from './entities/product.entity';
@@ -39,10 +40,10 @@ export class ProductsRepository {
       where['category'] = { slug: dto.categorySlug, deletedAt: null };
     }
 
-    if (dto.minPrice !== undefined || dto.maxPrice !== undefined) {
+    if (dto.minPrice || dto.maxPrice) {
       const priceFilter: Record<string, number> = {};
-      if (dto.minPrice !== undefined) priceFilter['$gte'] = dto.minPrice;
-      if (dto.maxPrice !== undefined) priceFilter['$lte'] = dto.maxPrice;
+      if (dto.minPrice) priceFilter['$gte'] = dto.minPrice;
+      if (dto.maxPrice) priceFilter['$lte'] = dto.maxPrice;
       where['price'] = priceFilter;
     }
 
@@ -50,11 +51,15 @@ export class ProductsRepository {
       where['name'] = { $ilike: `%${dto.search}%` };
     }
 
+    const sortField = dto.sortBy ?? ProductSortField.CreatedAt;
+    const sortDirection = dto.sortOrder ?? SortOrder.Desc;
+    const orderBy = { [sortField]: sortDirection };
+
     const [items, total] = await this.em.findAndCount(ProductEntity, where, {
       populate: ['category'],
       limit,
       offset,
-      orderBy: { createdAt: 'DESC' },
+      orderBy,
     });
 
     return { items, total, page, limit };

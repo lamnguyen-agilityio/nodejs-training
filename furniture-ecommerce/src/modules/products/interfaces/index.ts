@@ -1,3 +1,4 @@
+import { ProductSortField, SortOrder } from '@/common/enums';
 import type { Category } from '@/modules/categories/entities/category.entity';
 
 import type { Product } from '../entities/product.entity';
@@ -30,6 +31,8 @@ export interface FindProductsDto {
   page?: number;
   limit?: number;
   includeHidden?: boolean;
+  sortBy?: ProductSortField;
+  sortOrder?: SortOrder;
 }
 
 export interface PaginatedProducts {
