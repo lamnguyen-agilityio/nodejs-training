@@ -1,9 +1,7 @@
 export interface CreateCategory {
   name: string;
+  image: string;
   description?: string;
 }
 
-export interface UpdateCategory {
-  name?: string;
-  description?: string;
-}
+export type UpdateCategory = Partial<CreateCategory>;
