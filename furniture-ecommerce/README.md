@@ -71,10 +71,10 @@ This platform allows users to browse furniture products, manage a shopping cart,
 | Language | TypeScript 5.7 |
 | Auth Provider (Primary) | [Clerk](https://clerk.com) |
 | Auth Provider (Backup) | [Auth0](https://auth0.com) |
-| Auth Framework | [Passport.js](https://www.passportjs.org) |
 | ORM | [MikroORM](https://mikro-orm.io) |
 | Database | PostgreSQL 16 |
 | Payments | [Stripe SDK](https://stripe.com/docs) |
+| Logger | [NestJS Pino](https://github.com/iamolegga/nestjs-pino) |
 | Package Manager | [pnpm](https://pnpm.io) 10 |
 | Runtime | Node.js 24 |
 | Containerization | Docker + Docker Compose |
@@ -84,19 +84,101 @@ This platform allows users to browse furniture products, manage a shopping cart,
 
 ## Architecture
 
+### Auth Provider Flow
+
+```
+Request arrives
+     │
+     ▼
+AuthGuard reads active provider
+     │
+     ├── provider = clerk ──► Clerk JWT verified
+     │
+     └── provider = auth0 ──► Auth0 JWT verified
+              │
+              ▼
+         User identity resolved
+              │
+              ▼
+         Request proceeds with AuthenticatedUser
+```
+ 
+Admin can switch the active provider at runtime via `POST /auth/provider`.
+All subsequent requests are validated against the new provider immediately —
+no restart required.
+ 
+---
+
+### Guest Cart → Merge Flow
+ 
+```
+Guest user
+     │
+     ▼
+Adds items to cart (stored in storage)
+     │
+     ▼
+User signs in
+     │
+     ▼
+FE sends POST /carts/merge
+with guest cart items
+     │
+     ▼
+BE merges guest cart into user cart
+     │
+     ├── Item already in user cart?
+     │        │
+     │        ▼
+     │   Keep higher quantity
+     │   (capped at available stock)
+     │
+     └── New item?
+              │
+              ▼
+         Add to user cart
+         (skip if out of stock)
+     │
+     ▼
+Guest localStorage merged
+     │
+     ▼
+User sees unified cart
+```
+
+---
+
 ### Payment Flow
 
 ```
 User Checkout
      │
      ▼
-Stripe Checkout Session
+Stock deducted atomically
      │
      ▼
-Stripe Webhook ──► Order Confirmed / Failed
+Stripe Checkout Session created
      │
-     ▼
-User notified (success | failure)
+     ├──► User pays on Stripe page
+     │         │
+     │         ▼
+     │    Stripe Webhook
+     │         │
+     │    ┌────┴────┐
+     │    ▼         ▼
+     │  Paid      Expired
+     │    │         │
+     │    ▼         ▼
+     │ Order=paid  Stock rolled back
+     │             Order=cancelled
+     │
+     └──► User redirected to success / cancel URL
+              │
+              ▼
+         FE polls GET /payments/:orderId
+              │
+              ▼
+         Show result to user
 ```
 
 ---
@@ -107,36 +189,93 @@ User notified (success | failure)
 furniture-ecommerce/
 ├── src/
 │   ├── common/
-│   │   ├── constants/           # Shared constants (app, db, error codes, messages)
+│   │   ├── constants/           # Shared constants (app, db, error codes, messages, file, validation)
 │   │   ├── database/            # DB retry policy & @Retryable decorator
-│   │   ├── enums/               # Shared enums (env, role, status, provider)
+│   │   ├── dtos/                # Shared DTOs (health-status, pagination)
+│   │   ├── enums/               # Shared enums (env, role, status, provider, sort)
 │   │   ├── filters/             # Global HTTP exception filter
-│   │   ├── interfaces/          # Shared interfaces
+│   │   ├── interfaces/          # Shared interfaces (error, pagination)
 │   │   ├── logger/              # Pino logger config
-│   │   └── utils/               # Shared utility helpers
-│   ├── config/                  # App configuration (env validation, cors, db, swagger, versioning)
+│   │   ├── pipes/               # Shared pipes (parse-image-file)
+│   │   └── utils/               # Shared utility helpers (pagination, text)
+│   ├── config/                  # App configuration (env validation, cors, db, helmet, swagger, versioning)
 │   ├── migrations/              # MikroORM database migrations
 │   ├── modules/
 │   │   ├── auth/                # Authentication module
 │   │   │   ├── adapters/        # Auth provider adapters (Clerk, Auth0)
 │   │   │   ├── decorators/      # @Auth, @CurrentUser, @Roles decorators
-│   │   │   ├── dtos/            # Auth DTOs (authenticated-user, switch-provider)
+│   │   │   ├── dtos/            # Auth DTOs (authenticated-user, provider-status, switch-provider)
 │   │   │   ├── guards/          # AuthGuard, RolesGuard
-│   │   │   └── interfaces/      # Auth interfaces (token, provider, authenticated-user)
-│   │   ├── cart-items/
-│   │   │   └── entities/        # CartItem entity
-│   │   ├── categories/
-│   │   │   └── entities/        # Category entity
-│   │   ├── order-items/
-│   │   │   └── entities/        # OrderItem entity
-│   │   ├── orders/
-│   │   │   └── entities/        # Order entity
-│   │   ├── payments/
-│   │   │   └── entities/        # Payment entity
-│   │   ├── products/
-│   │   │   └── entities/        # Product entity
+│   │   │   ├── interfaces/      # Auth interfaces (token, provider, authenticated-user)
+│   │   │   ├── auth-provider.factory.ts
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.module.ts
+│   │   │   └── auth.service.ts
+│   │   ├── carts/               # Shopping cart module
+│   │   │   ├── dtos/            # Cart DTOs (add-cart-item, cart-response, merge-cart, etc.)
+│   │   │   ├── entities/        # CartItem entity
+│   │   │   ├── interfaces/
+│   │   │   ├── carts.controller.ts
+│   │   │   ├── carts.module.ts
+│   │   │   ├── carts.repository.ts
+│   │   │   └── carts.service.ts
+│   │   ├── categories/          # Product categories module
+│   │   │   ├── dtos/            # Category DTOs (create, update, response)
+│   │   │   ├── entities/        # Category entity
+│   │   │   ├── interfaces/
+│   │   │   ├── categories.controller.ts
+│   │   │   ├── categories.module.ts
+│   │   │   ├── categories.repository.ts
+│   │   │   └── categories.service.ts
+│   │   ├── orders/              # Orders module
+│   │   │   ├── dtos/            # Order DTOs (find-query, response, update-status, etc.)
+│   │   │   ├── entities/        # Order & OrderItem entities
+│   │   │   ├── interfaces/
+│   │   │   ├── order-status.machine.ts
+│   │   │   ├── orders.controller.ts
+│   │   │   ├── orders.module.ts
+│   │   │   ├── orders.repository.ts
+│   │   │   └── orders.service.ts
+│   │   ├── payments/            # Payments module
+│   │   │   ├── dtos/            # Payment DTOs (checkout-response, payment-response)
+│   │   │   ├── entities/        # Payment entity
+│   │   │   ├── interfaces/
+│   │   │   ├── providers/       # Stripe provider
+│   │   │   ├── payment-provider.service.ts
+│   │   │   ├── payments.controller.ts
+│   │   │   ├── payments.module.ts
+│   │   │   ├── payments.repository.ts
+│   │   │   └── payments.service.ts
+│   │   ├── products/            # Products module
+│   │   │   ├── dtos/            # Product DTOs (create, update, response, query, paginated)
+│   │   │   ├── entities/        # Product entity
+│   │   │   ├── interfaces/
+│   │   │   ├── products.controller.ts
+│   │   │   ├── products.module.ts
+│   │   │   ├── products.repository.ts
+│   │   │   └── products.service.ts
+│   │   ├── upload/              # File upload module
+│   │   │   ├── providers/       # ImgBB upload provider
+│   │   │   ├── image-upload.service.ts
+│   │   │   └── upload.module.ts
 │   │   ├── user-identities/     # Multi-provider identity linking
-│   │   └── users/               # User module (service, repository)
+│   │   │   ├── entities/        # UserIdentity entity
+│   │   │   ├── interfaces/      # Upsert identity interface
+│   │   │   ├── user-identities.module.ts
+│   │   │   ├── user-identities.repository.ts
+│   │   │   └── user-identities.service.ts
+│   │   ├── users/               # User module
+│   │   │   ├── entities/        # User entity
+│   │   │   ├── interfaces/      # Create/update user interfaces
+│   │   │   ├── users.module.ts
+│   │   │   ├── users.repository.ts
+│   │   │   └── users.service.ts
+│   │   └── webhook/             # Stripe webhook module
+│   │       ├── handlers/        # Checkout completed & expired handlers
+│   │       ├── webhook.controller.ts
+│   │       ├── webhook.module.ts
+│   │       └── webhook.service.ts
+│   ├── test/                    # Shared test utilities & mocks
 │   ├── app.module.ts            # Root application module
 │   ├── app.controller.ts        # Health check controller
 │   ├── app.service.ts
