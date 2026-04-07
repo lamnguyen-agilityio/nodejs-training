@@ -1,7 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, plainToInstance, Type } from 'class-transformer';
-
-import { CategoryResponseDto } from '@/modules/categories/dtos';
+import { Expose, plainToInstance } from 'class-transformer';
 
 import type { Product } from '../entities/product.entity';
 
@@ -18,10 +16,6 @@ export class ProductResponseDto {
   @Expose()
   slug: string;
 
-  @ApiPropertyOptional({ example: 'A comfortable 3-seater sofa' })
-  @Expose()
-  description: string | null;
-
   @ApiProperty({ example: '1299.99' })
   @Expose()
   price: string;
@@ -37,11 +31,6 @@ export class ProductResponseDto {
   @Expose()
   quantityInStock: number;
 
-  @ApiProperty({ type: () => CategoryResponseDto })
-  @Expose()
-  @Type(() => CategoryResponseDto)
-  category: CategoryResponseDto;
-
   @ApiProperty()
   @Expose()
   createdAt: Date;
@@ -52,5 +41,15 @@ export class ProductResponseDto {
 
   static from(product: Product): ProductResponseDto {
     return plainToInstance(ProductResponseDto, product, { excludeExtraneousValues: true });
+  }
+}
+
+export class ProductResponseDetailDto extends ProductResponseDto {
+  @ApiPropertyOptional({ example: 'A comfortable 3-seater sofa' })
+  @Expose()
+  description: string | null;
+
+  static from(product: Product): ProductResponseDetailDto {
+    return plainToInstance(ProductResponseDetailDto, product, { excludeExtraneousValues: true });
   }
 }
