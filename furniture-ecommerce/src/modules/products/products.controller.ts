@@ -39,9 +39,9 @@ import {
   CreateProductFormDto,
   FindProductsQueryDto,
   PaginatedProductsDto,
-  ProductResponseDto,
   UpdateProductDto,
   UpdateProductFormDto,
+  ProductResponseDetailDto,
 } from './dtos';
 import { ProductsService } from './products.service';
 
@@ -66,12 +66,12 @@ export class ProductsController {
 
   @Get(':slug')
   @ApiOperation({ summary: 'Get product by slug' })
-  @ApiOkResponse({ type: ProductResponseDto })
+  @ApiOkResponse({ type: ProductResponseDetailDto })
   @ApiNotFoundResponse({ description: 'Product not found' })
-  async findOne(@Param('slug') slug: string): Promise<ProductResponseDto> {
+  async findOne(@Param('slug') slug: string): Promise<ProductResponseDetailDto> {
     const product = await this.productsService.findOne({ slug });
 
-    return ProductResponseDto.from(product);
+    return ProductResponseDetailDto.from(product);
   }
 
   // ─── Admin ────────────────────────────────────────────────────────────────
@@ -82,13 +82,13 @@ export class ProductsController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create product with image upload (Admin)' })
   @ApiBody({ type: CreateProductFormDto })
-  @ApiCreatedResponse({ type: ProductResponseDto })
+  @ApiCreatedResponse({ type: ProductResponseDetailDto })
   @ApiForbiddenResponse({ description: 'You are not authorized to create a product' })
   @ApiConflictResponse({ description: 'Product with this name already exists' })
   async create(
     @Body() dto: CreateProductDto,
     @UploadedFile(new ParseImageFilePipe(true)) file: Express.Multer.File,
-  ): Promise<ProductResponseDto> {
+  ): Promise<ProductResponseDetailDto> {
     const category = await this.productsService.findCategoryById(dto.categoryId);
     if (!category) throw new NotFoundException(`Category ${dto.categoryId} not found`);
 
@@ -104,7 +104,7 @@ export class ProductsController {
       category,
     );
 
-    return ProductResponseDto.from(product);
+    return ProductResponseDetailDto.from(product);
   }
 
   @Patch(':id')
@@ -113,14 +113,14 @@ export class ProductsController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Update product with optional image upload (Admin)' })
   @ApiBody({ type: UpdateProductFormDto })
-  @ApiOkResponse({ type: ProductResponseDto })
+  @ApiOkResponse({ type: ProductResponseDetailDto })
   @ApiForbiddenResponse({ description: 'You are not authorized to update a product' })
   @ApiNotFoundResponse({ description: 'Product not found' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateProductDto,
     @UploadedFile(new ParseImageFilePipe(false)) file: Express.Multer.File | undefined,
-  ): Promise<ProductResponseDto> {
+  ): Promise<ProductResponseDetailDto> {
     let category: Category | undefined;
     let image: string | undefined;
 
@@ -146,7 +146,7 @@ export class ProductsController {
       category as Category,
     );
 
-    return ProductResponseDto.from(product);
+    return ProductResponseDetailDto.from(product);
   }
 
   @Delete(':id')
