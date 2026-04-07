@@ -47,7 +47,12 @@ export class PaymentsService {
     this.assertOrderIsPending(order);
 
     // atomic stock deduction — race condition safe
-    await this.paymentsRepository.deductStockAtomic(order);
+    const { ok, productName } = await this.paymentsRepository.deductStockAtomic(order);
+    if (!ok) {
+      throw new ConflictException(
+        `Product ${productName} is out of stock, please remove it from your cart`,
+      );
+    }
 
     // atomically claim or retrieve existing pending payment record
     const { payment, isNew } = await this.paymentsRepository.createOrClaimPending(
