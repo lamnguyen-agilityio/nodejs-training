@@ -20,7 +20,7 @@ export class CheckoutCompletedHandler {
   /**
    * checkout.session.completed
    * payment succeeded — update payment + order to paid.
-   * stock was already deducted at createFromCart — no need to deduct again.
+   * stock was already deducted at create checkout — no need to deduct again.
    */
   async handleCompleted(event: WebhookEvent): Promise<void> {
     this.logger.info({ sessionId: event.sessionId }, 'Handling checkout.session.completed');
