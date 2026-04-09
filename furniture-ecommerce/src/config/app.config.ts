@@ -18,6 +18,9 @@ export const appConfig = registerAs('app', () => ({
   stripeSecretKey: process.env.STRIPE_SECRET_KEY!,
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
   frontendUrl: process.env.FRONTEND_URL!,
+  twilioAccountSid: process.env.TWILIO_ACCOUNT_SID!,
+  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN!,
+  twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER!,
 }));
 
 /**

@@ -30,4 +30,9 @@ export const envSchema = Joi.object({
 
   // auth provider.
   AUTH_PROVIDER: Joi.string().valid(AuthProvider.Clerk, AuthProvider.Auth0).required(),
+
+  // Twilio.
+  TWILIO_ACCOUNT_SID: Joi.string().required(),
+  TWILIO_AUTH_TOKEN: Joi.string().required(),
+  TWILIO_PHONE_NUMBER: Joi.string().required(),
 }).options({ allowUnknown: true });
