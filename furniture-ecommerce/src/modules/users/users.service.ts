@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+import { PHONE_NUMBER } from '@/common/constants';
 import { Role } from '@/common/enums';
 
 import type { User } from './entities/user.entity';
@@ -33,6 +34,7 @@ export class UsersService {
     const user = await this.usersRepository.create({
       email,
       name,
+      phoneNumber: PHONE_NUMBER, // set default phone number
       role: Role.User, // default role User
     });
 
