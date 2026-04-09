@@ -5,16 +5,30 @@ import {
   Injectable,
   Inject,
   InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PinoLogger } from 'nestjs-pino';
 
+import { MESSAGES } from '@/common/constants';
 import { MfaMethod } from '@/common/enums';
 import type { User } from '@/modules/users/entities/user.entity';
 
-import { OTP_CHANNELS, OTP_TTL_MINUTES, BCRYPT_ROUNDS } from './constants';
+import { OTP_CHANNELS, OTP_TTL_MINUTES, BCRYPT_ROUNDS, MAX_ATTEMPTS } from './constants';
 import { MfaRepository } from './mfa.repository';
 import { OtpChannel } from './otp-channel.abstract';
+
+const {
+  OTP_SEND_FAILED,
+  NO_ACTIVE_OTP,
+  OPT_EXPIRED,
+  OPT_FAILED_ATTEMPTS,
+  INVALID_CODE,
+  INVALID_REMAINING,
+  MISSING_PHONE,
+  INVALID_OTP_METHOD,
+} = MESSAGES;
 
 @Injectable()
 export class MfaService {
@@ -49,10 +63,45 @@ export class MfaService {
         'OTP delivery failed — cleaning up persisted OTP',
       );
       await this.mfaRepository.deleteOtp(user);
-      throw new InternalServerErrorException('Failed to send OTP — please try again');
+      throw new InternalServerErrorException(OTP_SEND_FAILED);
     }
 
     this.logger.info({ userId: user.id, method }, 'MFA OTP sent');
+  }
+
+  /**
+   * validate code → write mfa_verified_at via repository.
+   * no new token issued — provider JWT remains in use.
+   */
+  async verifyOtp(user: User, code: string): Promise<void> {
+    const otp = await this.mfaRepository.findActiveOtp(user);
+
+    if (!otp) {
+      throw new NotFoundException(NO_ACTIVE_OTP);
+    }
+
+    if (new Date() > otp.expiresAt) {
+      await this.mfaRepository.deleteOtp(user);
+      throw new UnauthorizedException(OPT_EXPIRED);
+    }
+
+    if (otp.attempts >= MAX_ATTEMPTS) {
+      await this.mfaRepository.deleteOtp(user);
+      throw new UnauthorizedException(OPT_FAILED_ATTEMPTS);
+    }
+
+    const isValid = await bcrypt.compare(code, otp.codeHash);
+
+    if (!isValid) {
+      await this.mfaRepository.incrementAttempts(user);
+      const remaining = MAX_ATTEMPTS - otp.attempts - 1;
+      throw new UnauthorizedException(remaining > 0 ? INVALID_CODE(remaining) : INVALID_REMAINING);
+    }
+
+    await this.mfaRepository.deleteOtp(user);
+    await this.mfaRepository.markMfaVerified(user.id);
+
+    this.logger.info({ userId: user.id }, 'MFA verified — session window opened');
   }
 
   /**
@@ -68,9 +117,7 @@ export class MfaService {
   private resolveDestination(user: User, method: MfaMethod): string {
     if (method === MfaMethod.Sms) {
       if (!user.phoneNumber) {
-        throw new BadRequestException(
-          'Phone number not set — update your profile before using SMS MFA',
-        );
+        throw new BadRequestException(MISSING_PHONE);
       }
       return user.phoneNumber;
     }
@@ -84,7 +131,7 @@ export class MfaService {
   private resolveChannel(method: MfaMethod): OtpChannel {
     const channel = this.channels.find((c) => c.method === method);
     if (!channel) {
-      throw new BadRequestException(`MFA method '${method}' is not supported`);
+      throw new BadRequestException(INVALID_OTP_METHOD(method));
     }
 
     return channel;

@@ -12,3 +12,8 @@ export const PRICE_DECIMAL = {
 export const PRODUCT_DEFAULTS = {
   QTY_IN_STOCK: 0,
 } as const;
+
+/**
+ * Set phone number for each user
+ */
+export const PHONE_NUMBER = '+18777804236';
