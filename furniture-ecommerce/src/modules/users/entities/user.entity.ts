@@ -12,11 +12,17 @@ export const UserEntity = defineEntity({
     // user's email address — synced from Clerk on first sign-in.
     email: p.string().unique(),
 
+    // user's phone number.
+    phoneNumber: p.string().nullable(),
+
     // user's display name — synced from Clerk on first sign-in.
     name: p.string(),
 
     // application-level role. Defaults to USER; elevated to ADMIN manually.
     role: p.enum([Role.Admin, Role.User]).default(Role.User),
+
+    // timestamp when MFA was verified, if applicable.
+    mfaVerifiedAt: p.datetime().nullable(),
 
     // creation timestamp.
     createdAt: p
