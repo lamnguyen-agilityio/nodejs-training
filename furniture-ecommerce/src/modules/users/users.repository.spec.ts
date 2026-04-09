@@ -22,9 +22,10 @@ const makeUser = (overrides: Partial<User> = {}): User =>
     ...overrides,
   }) as User;
 
-const makeCreateData = (): Pick<User, 'email' | 'name' | 'role'> => ({
+const makeCreateData = (): Pick<User, 'email' | 'name' | 'role' | 'phoneNumber'> => ({
   email: faker.internet.email(),
   name: faker.person.fullName(),
+  phoneNumber: faker.phone.number(),
   role: Role.User,
 });
 
