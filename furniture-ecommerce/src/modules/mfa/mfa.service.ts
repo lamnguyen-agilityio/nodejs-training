@@ -5,8 +5,6 @@ import {
   Injectable,
   Inject,
   InternalServerErrorException,
-  NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PinoLogger } from 'nestjs-pino';
@@ -15,20 +13,11 @@ import { MESSAGES } from '@/common/constants';
 import { MfaMethod } from '@/common/enums';
 import type { User } from '@/modules/users/entities/user.entity';
 
-import { OTP_CHANNELS, OTP_TTL_MINUTES, BCRYPT_ROUNDS, MAX_ATTEMPTS } from './constants';
+import { OTP_CHANNELS, OTP_TTL_MINUTES, BCRYPT_ROUNDS } from './constants';
 import { MfaRepository } from './mfa.repository';
 import { OtpChannel } from './otp-channel.abstract';
 
-const {
-  OTP_SEND_FAILED,
-  NO_ACTIVE_OTP,
-  OPT_EXPIRED,
-  OPT_FAILED_ATTEMPTS,
-  INVALID_CODE,
-  INVALID_REMAINING,
-  MISSING_PHONE,
-  INVALID_OTP_METHOD,
-} = MESSAGES;
+const { OTP_SEND_FAILED, MISSING_PHONE, INVALID_OTP_METHOD } = MESSAGES;
 
 @Injectable()
 export class MfaService {
@@ -74,33 +63,7 @@ export class MfaService {
    * no new token issued — provider JWT remains in use.
    */
   async verifyOtp(user: User, code: string): Promise<void> {
-    const otp = await this.mfaRepository.findActiveOtp(user);
-
-    if (!otp) {
-      throw new NotFoundException(NO_ACTIVE_OTP);
-    }
-
-    if (new Date() > otp.expiresAt) {
-      await this.mfaRepository.deleteOtp(user);
-      throw new UnauthorizedException(OPT_EXPIRED);
-    }
-
-    if (otp.attempts >= MAX_ATTEMPTS) {
-      await this.mfaRepository.deleteOtp(user);
-      throw new UnauthorizedException(OPT_FAILED_ATTEMPTS);
-    }
-
-    const isValid = await bcrypt.compare(code, otp.codeHash);
-
-    if (!isValid) {
-      await this.mfaRepository.incrementAttempts(user);
-      const remaining = MAX_ATTEMPTS - otp.attempts - 1;
-      throw new UnauthorizedException(remaining > 0 ? INVALID_CODE(remaining) : INVALID_REMAINING);
-    }
-
-    await this.mfaRepository.deleteOtp(user);
-    await this.mfaRepository.markMfaVerified(user.id);
-
+    await this.mfaRepository.verifyAndConsumeOtp(user, code);
     this.logger.info({ userId: user.id }, 'MFA verified — session window opened');
   }
 
