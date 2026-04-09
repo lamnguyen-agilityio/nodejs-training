@@ -32,27 +32,32 @@ export class MfaRepository {
 
   /**
    * creates a new MFA OTP for a user.
+   * only one OTP is allowed per user at a time — any existing OTP is deleted first.
    */
   async createOtp(user: User, codeHash: string, method: MfaMethod, expiresAt: Date): Promise<void> {
-    // invalidate any previous OTP first — one active OTP per user
-    await this.deleteOtp(user);
+    await this.em.transactional(async (txEm) => {
+      // delete existing OTP inside transaction — atomic with insert below
+      await txEm.nativeDelete(MfaOtpEntity, { user });
 
-    const otp = this.em.create(MfaOtpEntity, {
-      user,
-      codeHash,
-      method,
-      attempts: 0,
-      expiresAt,
+      const otp = txEm.create(MfaOtpEntity, {
+        user,
+        codeHash,
+        method,
+        attempts: 0,
+        expiresAt,
+      });
+      txEm.persist(otp);
+      await txEm.flush();
     });
-    this.em.persist(otp);
-    await this.em.flush();
   }
 
   /**
    * increments the number of attempts for an MFA OTP.
    */
-  async incrementAttempts(user: User, currentAttempts: number): Promise<void> {
-    await this.em.nativeUpdate(MfaOtpEntity, { user }, { attempts: currentAttempts + 1 });
+  async incrementAttempts(user: User): Promise<void> {
+    await this.em
+      .getConnection()
+      .execute(`UPDATE mfa_otps SET attempts = attempts + 1 WHERE user_id = ?`, [user.id]);
   }
 
   /**

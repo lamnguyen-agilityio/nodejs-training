@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { MESSAGES } from '@/common/constants';
 import { Auth, CurrentUser } from '@/modules/auth/decorators';
@@ -31,7 +31,7 @@ export class MfaController {
       'Requires a valid provider (Clerk/Auth0) Bearer token. ' +
       'The same provider JWT is used for all subsequent calls — no new token is issued.',
   })
-  @ApiCreatedResponse({ description: 'OTP sent — check your phone' })
+  @ApiOkResponse({ description: 'OTP sent — check your phone' })
   async sendOtp(
     @CurrentUser() authUser: AuthenticatedUser,
     @Body() dto: SendOtpDto,

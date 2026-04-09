@@ -1,6 +1,11 @@
 import * as crypto from 'crypto';
 
-import { BadRequestException, Injectable, Inject } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Inject,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PinoLogger } from 'nestjs-pino';
 
@@ -32,8 +37,20 @@ export class MfaService {
     const codeHash = await bcrypt.hash(code, BCRYPT_ROUNDS);
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
 
+    // persist first so the record exists before attempting delivery
     await this.mfaRepository.createOtp(user, codeHash, method, expiresAt);
-    await channel.send(destination, code);
+
+    try {
+      await channel.send(destination, code);
+    } catch (err) {
+      // remove undeliverable OTP
+      this.logger.error(
+        { userId: user.id, method, err },
+        'OTP delivery failed — cleaning up persisted OTP',
+      );
+      await this.mfaRepository.deleteOtp(user);
+      throw new InternalServerErrorException('Failed to send OTP — please try again');
+    }
 
     this.logger.info({ userId: user.id, method }, 'MFA OTP sent');
   }
@@ -42,7 +59,7 @@ export class MfaService {
    * generate a random 6-digit code for MFA verification.
    */
   private generateCode(): string {
-    return String(crypto.randomInt(100_000, 999_999));
+    return String(crypto.randomInt(100_000, 1_000_000));
   }
 
   /**
