@@ -30,6 +30,7 @@ import {
 
 import { Role } from '@/common/enums';
 import { ParseImageFilePipe } from '@/common/pipes/parse-image-file.pipe';
+import { Public } from '@/modules/auth/decorators';
 import { AuthRoles } from '@/modules/auth/decorators';
 import type { Category } from '@/modules/categories/entities/category.entity';
 import { ImageUploadService } from '@/modules/upload/image-upload.service';
@@ -55,6 +56,7 @@ export class ProductsController {
 
   // ─── Public ───────────────────────────────────────────────────────────────
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'List products with filters and pagination' })
   @ApiOkResponse({ type: PaginatedProductsDto })
@@ -64,6 +66,7 @@ export class ProductsController {
     return PaginatedProductsDto.from(items, total, page, limit);
   }
 
+  @Public()
   @Get(':slug')
   @ApiOperation({ summary: 'Get product by slug' })
   @ApiOkResponse({ type: ProductResponseDetailDto })

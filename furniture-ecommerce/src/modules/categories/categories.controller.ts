@@ -28,6 +28,7 @@ import {
 
 import { Role } from '@/common/enums';
 import { ParseImageFilePipe } from '@/common/pipes/parse-image-file.pipe';
+import { Public } from '@/modules/auth/decorators';
 import { AuthRoles } from '@/modules/auth/decorators';
 
 import { CategoriesService } from './categories.service';
@@ -46,6 +47,7 @@ export class CategoriesController {
 
   // ─── Public ───────────────────────────────────────────────────────────────
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'List all categories' })
   @ApiOkResponse({ type: [CategoryResponseDto] })
@@ -54,6 +56,7 @@ export class CategoriesController {
     return CategoryResponseDto.fromMany(categories);
   }
 
+  @Public()
   @Get(':slug')
   @ApiOperation({ summary: 'Get category by slug' })
   @ApiOkResponse({ type: CategoryResponseDto })
