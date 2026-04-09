@@ -1,15 +1,24 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 import { MESSAGES } from '@/common/constants';
 import { Auth, CurrentUser } from '@/modules/auth/decorators';
 import type { AuthenticatedUser } from '@/modules/auth/interfaces';
 import { UsersService } from '@/modules/users/users.service';
 
+import { MFA_SESSION_HOURS } from './constants';
 import { SkipMfa } from './decorators/skip-mfa.decorator';
-import { SendOtpDto } from './dtos';
+import { SendOtpDto, VerifyOtpDto } from './dtos';
 import { MfaResponseDto } from './dtos/mfa-response.dto';
 import { MfaService } from './mfa.service';
+
+const { OTP_SENT, MFA_VERIFIED } = MESSAGES;
 
 @ApiTags('auth / mfa')
 @ApiBearerAuth()
@@ -39,6 +48,28 @@ export class MfaController {
     const user = await this.usersService.findOne({ id: authUser.userId });
     await this.mfaService.sendOtp(user, dto.method);
 
-    return MfaResponseDto.from(MESSAGES.OTP_SENT);
+    return MfaResponseDto.from(OTP_SENT);
+  }
+
+  @Post('verify')
+  @Auth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify MFA OTP',
+    description:
+      'Validates the 6-digit OTP. On success, records mfa_verified_at in DB. ' +
+      'The original provider JWT remains valid — no new token issued. ' +
+      `MFA session lasts ${MFA_SESSION_HOURS} hours before re-verification is required.`,
+  })
+  @ApiOkResponse({ description: 'MFA verified — session valid for 8 hours' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or expired OTP' })
+  async verifyOtp(
+    @CurrentUser() authUser: AuthenticatedUser,
+    @Body() dto: VerifyOtpDto,
+  ): Promise<MfaResponseDto> {
+    const user = await this.usersService.findOne({ id: authUser.userId });
+    await this.mfaService.verifyOtp(user, dto.code);
+
+    return MfaResponseDto.from(MFA_VERIFIED(MFA_SESSION_HOURS));
   }
 }

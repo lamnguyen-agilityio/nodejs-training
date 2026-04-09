@@ -1,11 +1,17 @@
 import { EntityManager } from '@mikro-orm/postgresql';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PinoLogger } from 'nestjs-pino';
 
+import { MESSAGES } from '@/common/constants';
 import { MfaMethod } from '@/common/enums';
 import { UserEntity, type User } from '@/modules/users/entities/user.entity';
 
+import { MAX_ATTEMPTS } from './constants';
 import { MfaOtpEntity, type MfaOtp } from './entities/mfa-otp.entity';
+
+const { NO_ACTIVE_OTP, OPT_EXPIRED, OPT_FAILED_ATTEMPTS, INVALID_CODE, INVALID_REMAINING } =
+  MESSAGES;
 
 @Injectable()
 export class MfaRepository {
@@ -52,18 +58,43 @@ export class MfaRepository {
   }
 
   /**
-   * increments the number of attempts for an MFA OTP.
+   * verifies an MFA OTP code for a user.
+   *
+   * on success: deletes OTP + marks user mfa_verified_at.
+   * on failure: atomically increments attempts, throws with remaining count.
+   * on expiry/lockout: deletes OTP, throws.
    */
-  async incrementAttempts(user: User): Promise<void> {
-    await this.em
-      .getConnection()
-      .execute(`UPDATE mfa_otps SET attempts = attempts + 1 WHERE user_id = ?`, [user.id]);
-  }
+  async verifyAndConsumeOtp(user: User, code: string): Promise<void> {
+    await this.em.transactional(async (txEm) => {
+      const otp = await txEm.findOne(MfaOtpEntity, { user });
 
-  /**
-   * marks a user as having MFA verified.
-   */
-  async markMfaVerified(userId: string): Promise<void> {
-    await this.em.nativeUpdate(UserEntity, { id: userId }, { mfaVerifiedAt: new Date() });
+      if (!otp) {
+        throw new NotFoundException(NO_ACTIVE_OTP);
+      }
+
+      if (new Date() > otp.expiresAt) {
+        await txEm.nativeDelete(MfaOtpEntity, { id: otp.id });
+        throw new UnauthorizedException(OPT_EXPIRED);
+      }
+
+      if (otp.attempts >= MAX_ATTEMPTS) {
+        await txEm.nativeDelete(MfaOtpEntity, { id: otp.id });
+        throw new UnauthorizedException(OPT_FAILED_ATTEMPTS);
+      }
+
+      const isValid = await bcrypt.compare(code, otp.codeHash);
+
+      if (!isValid) {
+        await txEm.nativeUpdate(MfaOtpEntity, { id: otp.id }, { attempts: otp.attempts + 1 });
+        const remaining = MAX_ATTEMPTS - otp.attempts - 1;
+        throw new UnauthorizedException(
+          remaining > 0 ? INVALID_CODE(remaining) : INVALID_REMAINING,
+        );
+      }
+
+      // valid — consume OTP and mark user as MFA-verified atomically
+      await txEm.nativeDelete(MfaOtpEntity, { id: otp.id });
+      await txEm.nativeUpdate(UserEntity, { id: user.id }, { mfaVerifiedAt: new Date() });
+    });
   }
 }
