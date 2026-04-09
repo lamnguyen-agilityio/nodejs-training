@@ -9,12 +9,14 @@ import {
 } from '@nestjs/swagger';
 
 import { Role } from '@/common/enums';
+import { SkipMfa } from '@/modules/mfa/decorators/skip-mfa.decorator';
 
 import { AuthProviderFactory } from './auth-provider.factory';
 import { CurrentUser, Auth, AuthRoles } from './decorators';
 import { ProviderStatusDto, SwitchProviderDto, AuthenticatedUserDto } from './dtos';
 import type { AuthenticatedUser } from './interfaces';
 
+@SkipMfa()
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {

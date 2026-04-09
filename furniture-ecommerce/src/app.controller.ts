@@ -1,6 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { Public } from '@/modules/auth/decorators';
+
 import { AppService } from './app.service';
 import { HealthStatusDto } from './common/dtos';
 
@@ -9,6 +11,7 @@ import { HealthStatusDto } from './common/dtos';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @Public()
   @Get('health')
   @ApiOperation({ summary: 'Health check' })
   @ApiOkResponse({
