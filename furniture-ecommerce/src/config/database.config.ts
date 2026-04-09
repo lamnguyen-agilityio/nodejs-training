@@ -5,6 +5,7 @@ import { config } from 'dotenv';
 
 import { CartItemEntity } from '@/modules/carts/entities/cart-item.entity';
 import { CategoryEntity } from '@/modules/categories/entities/category.entity';
+import { MfaOtpEntity } from '@/modules/mfa/entities/mfa-otp.entity';
 import { OrderItemEntity } from '@/modules/orders/entities/order-item.entity';
 import { OrderEntity } from '@/modules/orders/entities/order.entity';
 import { PaymentEntity } from '@/modules/payments/entities/payment.entity';
@@ -43,6 +44,7 @@ export const databaseConfig = () =>
       CartItemEntity,
       UserIdentityEntity,
       PaymentEntity,
+      MfaOtpEntity,
     ],
     debug:
       process.env.NODE_ENV !== Environment.Production && process.env.MIKRO_ORM_DEBUG === 'true',
