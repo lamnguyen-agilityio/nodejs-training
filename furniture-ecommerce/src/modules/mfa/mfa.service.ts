@@ -13,7 +13,7 @@ import { MESSAGES } from '@/common/constants';
 import { MfaMethod } from '@/common/enums';
 import type { User } from '@/modules/users/entities/user.entity';
 
-import { OTP_CHANNELS, OTP_TTL_MINUTES, BCRYPT_ROUNDS } from './constants';
+import { OTP_CHANNELS, OTP_TTL_MINUTES, BCRYPT_ROUNDS, MFA_SESSION_MS } from './constants';
 import { MfaRepository } from './mfa.repository';
 import { OtpChannel } from './otp-channel.abstract';
 
@@ -98,5 +98,15 @@ export class MfaService {
     }
 
     return channel;
+  }
+
+  /**
+   * check if user's MFA session is still within the 8-hour window.
+   * called by MfaGuard on every protected request.
+   */
+  isMfaSessionValid(user: User): boolean {
+    if (!user.mfaVerifiedAt) return false;
+
+    return Date.now() - user.mfaVerifiedAt.getTime() < MFA_SESSION_MS;
   }
 }

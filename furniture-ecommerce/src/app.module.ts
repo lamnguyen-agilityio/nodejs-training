@@ -1,12 +1,16 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 
 import { LoggerModule } from '@/common/logger/logger.module';
 import { envSchema, appConfig, databaseConfig } from '@/config';
 import { AuthModule } from '@/modules/auth/auth.module';
+import { AuthGuard } from '@/modules/auth/guards/';
 import { CartsModule } from '@/modules/carts/carts.module';
 import { CategoriesModule } from '@/modules/categories/categories.module';
+import { MfaGuard } from '@/modules/mfa/guards/mfa.guard';
+import { MfaModule } from '@/modules/mfa/mfa.module';
 import { OrdersModule } from '@/modules/orders/orders.module';
 import { PaymentsModule } from '@/modules/payments/payments.module';
 import { ProductsModule } from '@/modules/products/products.module';
@@ -47,8 +51,13 @@ import { AppService } from './app.service';
     OrdersModule,
     PaymentsModule,
     WebhookModule,
+    MfaModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: MfaGuard },
+  ],
 })
 export class AppModule {}
