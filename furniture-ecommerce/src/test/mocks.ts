@@ -33,6 +33,7 @@ export const createMockEm = (): jest.Mocked<
     | 'assign'
     | 'clear'
     | 'remove'
+    | 'nativeDelete'
     | 'nativeUpdate'
     | 'fork'
     | 'transactional'
@@ -47,6 +48,7 @@ export const createMockEm = (): jest.Mocked<
   assign: jest.fn(),
   clear: jest.fn(),
   remove: jest.fn(),
+  nativeDelete: jest.fn(),
   nativeUpdate: jest.fn(),
   fork: jest.fn(),
   transactional: jest.fn(),
