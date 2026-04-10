@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { NotFoundException } from '@nestjs/common';
 
+import { PHONE_NUMBER } from '@/common/constants';
 import { Role } from '@/common/enums';
 
 import type { User } from './entities/user.entity';
@@ -107,6 +108,7 @@ describe('UsersService', () => {
         email: dto.email,
         name: dto.name,
         role: Role.User,
+        phoneNumber: PHONE_NUMBER,
       });
       expect(result).toEqual({ user: newUser, created: true });
     });

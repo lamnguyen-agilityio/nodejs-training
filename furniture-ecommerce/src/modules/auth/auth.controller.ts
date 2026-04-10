@@ -12,7 +12,7 @@ import { Role } from '@/common/enums';
 import { SkipMfa } from '@/modules/mfa/decorators/skip-mfa.decorator';
 
 import { AuthProviderFactory } from './auth-provider.factory';
-import { CurrentUser, Auth, AuthRoles } from './decorators';
+import { CurrentUser, Auth, AuthRoles, Public } from './decorators';
 import { ProviderStatusDto, SwitchProviderDto, AuthenticatedUserDto } from './dtos';
 import type { AuthenticatedUser } from './interfaces';
 
@@ -37,6 +37,7 @@ export class AuthController {
     return user;
   }
 
+  @Public()
   @Get('provider')
   @ApiOperation({
     summary: 'Get active auth provider',

@@ -25,6 +25,17 @@ jest.mock('@nestjs/swagger', () => ({
   ApiExcludeEndpoint: jest.fn(() => () => {}),
 }));
 
+jest.mock('@/modules/mfa/decorators/skip-mfa.decorator', () => ({
+  SkipMfa: () => () => {},
+}));
+
+jest.mock('@/modules/auth/decorators', () => ({
+  Public: () => () => {},
+  Auth: () => () => {},
+  AuthRoles: () => () => {},
+  CurrentUser: () => () => {},
+}));
+
 jest.mock('jwks-rsa', () => ({
   JwksClient: jest.fn().mockImplementation(() => ({
     getSigningKey: jest.fn(),
